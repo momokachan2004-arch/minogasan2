@@ -50,25 +50,14 @@ window.SITUATION_TAGS = [
 
 window.CAMPAIGNS = [
   /* ---- 全国共通の一般キャンペーン ---- */
-  {
-    id: 3001, service: "Netflix", icon: "🎬", category: "動画",
-    title: "初回1か月無料", detail: "スタンダードプランの新規登録が対象",
-    url: "https://www.netflix.com/jp/",
-    deadline: "2026-09-01", freeDays: 30, hasCancellation: true, addedAt: "2026-08-27",
-    tags: ["tanshin", "kosodate"],
-  },
+  // 2026-08-29 削除：Netflix（無料トライアルは2019年以降 実施なし）、
+  //            DAZN（無料トライアルは2022年に終了、現在は有料の割引のみ）。
+  //            いずれも「見逃す」対象が無いためリストから除外。
   {
     id: 3002, service: "FOD", icon: "📺", category: "動画",
     title: "2週間無料 ＋ 割引クーポン", detail: "初回登録・過去に未加入の人が対象",
     url: "https://fod.fujitv.co.jp/",
     deadline: "2026-09-03", freeDays: 14, hasCancellation: true, addedAt: "2026-08-20",
-    tags: ["tanshin"],
-  },
-  {
-    id: 3003, service: "DAZN", icon: "⚽", category: "動画",
-    title: "1週間の無料トライアル", detail: "対象プランの新規契約が対象",
-    url: "https://www.dazn.com/ja-JP/",
-    deadline: "2026-09-02", freeDays: 7, hasCancellation: true, addedAt: "2026-08-28",
     tags: ["tanshin"],
   },
   {
