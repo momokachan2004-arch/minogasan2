@@ -1,0 +1,23 @@
+{
+  "_comment": "定期更新の巡回リスト。ここに『終了日の告知が出にくい＝比較的安定した公式トライアル』を並べる。金融・通信の『〜◯/◯まで』の期限モノは自動確認が難しいので、原則ここには入れず手動運用にする。id は campaigns.js の該当エントリと対応（新規は null）。",
+  "lastReviewed": "2026-08-29",
+  "sources": [
+    { "id": 3001, "service": "Netflix",              "category": "動画",  "url": "https://www.netflix.com/jp/",                                  "kind": "free-trial", "notes": "無料トライアルは復活・停止が変動しやすい。要確認。" },
+    { "id": 3014, "service": "U-NEXT",               "category": "動画",  "url": "https://video.unext.jp/",                                     "kind": "free-trial", "notes": "31日間無料。終了日の告知なし＝deadline:null。" },
+    { "id": null, "service": "Lemino",               "category": "動画",  "url": "https://lemino.docomo.ne.jp/",                                "kind": "free-trial", "notes": "初回31日間無料（ドコモ）。" },
+    { "id": null, "service": "dアニメストア",          "category": "動画",  "url": "https://animestore.docomo.ne.jp/",                            "kind": "free-trial", "notes": "初回31日間無料。" },
+    { "id": null, "service": "Hulu",                 "category": "動画",  "url": "https://www.hulu.jp/",                                        "kind": "free-trial", "notes": "無料トライアルの有無が変動。" },
+    { "id": null, "service": "ABEMAプレミアム",        "category": "動画",  "url": "https://abema.tv/",                                           "kind": "free-trial", "notes": "無料期間が変動しやすい。" },
+    { "id": 3003, "service": "DAZN",                 "category": "動画",  "url": "https://www.dazn.com/ja-JP/",                                 "kind": "free-trial", "notes": "無料トライアルの有無・日数が変動。" },
+    { "id": 3006, "service": "Spotify",              "category": "音楽",  "url": "https://www.spotify.com/jp/premium/",                         "kind": "free-trial", "notes": "Premium Standard 3か月無料（新規未利用者）。終了日あり＝要確認。" },
+    { "id": null, "service": "YouTube Premium",       "category": "音楽",  "url": "https://www.youtube.com/premium",                             "kind": "free-trial", "notes": "1か月無料（新規）。ページがJS描画で読めない場合は手動。" },
+    { "id": null, "service": "Apple Music",           "category": "音楽",  "url": "https://music.apple.com/jp/",                                 "kind": "free-trial", "notes": "1か月無料（新規）。端末購入特典で延長の場合あり。" },
+    { "id": 3004, "service": "Amazon Music Unlimited", "category": "音楽",  "url": "https://www.amazon.co.jp/music/unlimited",                    "kind": "trial-or-discount", "notes": "『3か月無料』『3か月100円』など内容が入れ替わる。" },
+    { "id": 3008, "service": "Kindle Unlimited",      "category": "雑誌",  "url": "https://www.amazon.co.jp/kindle-dbs/hz/subscribe/ku",          "kind": "trial-or-discount", "notes": "通常30日間無料。『2か月無料』などの増量キャンペーンが不定期。" },
+    { "id": 3009, "service": "dマガジン",             "category": "雑誌",  "url": "https://magazine.dmkt-sp.jp/",                                "kind": "free-trial", "notes": "初回31日間無料。" },
+    { "id": null, "service": "楽天マガジン",           "category": "雑誌",  "url": "https://magazine.rakuten.co.jp/",                             "kind": "free-trial", "notes": "初回31日間無料。" },
+    { "id": 3007, "service": "タブホ",               "category": "雑誌",  "url": "https://tabuho.jp/",                                          "kind": "free-trial", "notes": "初月無料。" },
+    { "id": 3012, "service": "Amazon プライム",        "category": "買い物", "url": "https://www.amazon.co.jp/amazonprime",                        "kind": "free-trial", "notes": "30日間無料体験。学生は6か月。" },
+    { "id": 3010, "service": "Uber One",             "category": "フード", "url": "https://www.ubereats.com/jp",                                 "kind": "free-trial", "notes": "1か月無料トライアル。" }
+  ]
+}

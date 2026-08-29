@@ -1,0 +1,19 @@
+{
+  "name": "見逃さん",
+  "short_name": "見逃さん",
+  "description": "サブスク・キャッシュレス決済の無料期間や割引キャンペーンを見逃さないためのアプリ",
+  "lang": "ja",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#14302B",
+  "theme_color": "#14302B",
+  "categories": ["lifestyle", "shopping", "finance"],
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1,0 +1,11 @@
+# OS が作る不要ファイル
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# エディタ
+.vscode/
+.idea/
+
+# ローカルサーバーのログなど（もしあれば）
+*.log

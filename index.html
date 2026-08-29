@@ -1,0 +1,1012 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#F7F3E9" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#14302B" media="(prefers-color-scheme: dark)" />
+<title>見逃さん β</title>
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="見逃さん" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+
+  /* ---- ライト（既定）---- */
+  :root {
+    color-scheme: light;
+    --bg:#EFEADD; --frame:#F7F3E9; --card:#FFFFFF; --notch:var(--frame);
+    --ink:#1C302A; --muted:#42605A; --dim:#54726B; --faint:#657F78;
+    --accent:#1C7D62; --on-accent:#FFFFFF;
+    --amber:#8F5600; --red:#C1343B;
+    --line:rgba(0,0,0,.12);
+    --surface-1:rgba(0,0,0,.035); --surface-2:rgba(0,0,0,.06); --surface-3:rgba(0,0,0,.10);
+    --nav-bg:rgba(0,0,0,.03);
+    --perf-line:rgba(0,0,0,.16);
+    --scrim:rgba(24,34,29,.5);
+    --shadow:0 6px 16px rgba(40,50,45,.10);
+    --frame-shadow:0 24px 50px rgba(50,60,50,.18);
+    --accent-weak:color-mix(in srgb, var(--accent) 12%, var(--card));
+    --amber-weak:color-mix(in srgb, var(--amber) 14%, var(--card));
+    --red-weak:color-mix(in srgb, var(--red) 12%, var(--card));
+    --fd:'Zen Maru Gothic',sans-serif; --fb:'Zen Kaku Gothic New',sans-serif; --fm:'JetBrains Mono',monospace;
+  }
+
+  /* ---- ダーク（端末設定 or 手動）---- */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg:#0F241F; --frame:#14302B; --card:#1D3F38; --notch:var(--frame);
+      --ink:#F3EEE2; --muted:#A9BEB6; --dim:#8CA49C; --faint:#748C84;
+      --accent:#8FE3C7; --on-accent:#0D241F;
+      --amber:#F2A93B; --red:#E5484D;
+      --line:rgba(255,255,255,.10);
+      --surface-1:rgba(255,255,255,.045); --surface-2:rgba(255,255,255,.07); --surface-3:rgba(255,255,255,.12);
+      --nav-bg:rgba(0,0,0,.18);
+      --perf-line:rgba(243,238,226,.22);
+      --scrim:rgba(6,18,15,.72);
+      --shadow:0 6px 18px rgba(0,0,0,.22);
+      --frame-shadow:0 30px 60px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg:#0F241F; --frame:#14302B; --card:#1D3F38; --notch:var(--frame);
+    --ink:#F3EEE2; --muted:#A9BEB6; --dim:#8CA49C; --faint:#748C84;
+    --accent:#8FE3C7; --on-accent:#0D241F;
+    --amber:#F2A93B; --red:#E5484D;
+    --line:rgba(255,255,255,.10);
+    --surface-1:rgba(255,255,255,.045); --surface-2:rgba(255,255,255,.07); --surface-3:rgba(255,255,255,.12);
+    --nav-bg:rgba(0,0,0,.18);
+    --perf-line:rgba(243,238,226,.22);
+    --scrim:rgba(6,18,15,.72);
+    --shadow:0 6px 18px rgba(0,0,0,.22);
+    --frame-shadow:0 30px 60px rgba(0,0,0,.45);
+  }
+
+  html, body { margin:0; padding:0; }
+  body { background:var(--bg); font-family:var(--fb); color:var(--ink);
+    display:flex; justify-content:center; min-height:100vh; -webkit-font-smoothing:antialiased; }
+  #root { width:100%; display:flex; justify-content:center; }
+  .frame { width:100%; max-width:430px; background:var(--frame);
+    height:100vh; height:100dvh;
+    display:flex; flex-direction:column; position:relative; overflow:hidden; }
+  @media (min-width:520px) {
+    body { padding:24px 12px; align-items:flex-start; }
+    .frame { border-radius:34px; height:auto; min-height:800px; max-height:940px;
+      border:1px solid var(--line); box-shadow:var(--frame-shadow); }
+  }
+  .body { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  button { font-family:inherit; }
+  .btn { border:none; border-radius:14px; padding:12px 16px; font-size:14px; font-weight:700; cursor:pointer; width:100%; }
+  .btn-primary { background:var(--accent); color:var(--on-accent); }
+  .btn-primary:disabled { opacity:.45; cursor:default; }
+  .btn-ghost { background:var(--surface-2); color:var(--ink); }
+  .btn-danger { background:var(--red-weak); color:var(--red); border:1px solid color-mix(in srgb, var(--red) 45%, transparent); }
+  .link { color:var(--accent); text-decoration:none; cursor:pointer; background:none; border:none; padding:0; font-size:12.5px; font-weight:700; }
+  .head { padding:20px 16px 14px; }
+  .head-top { display:flex; justify-content:space-between; align-items:flex-start; }
+  .h-title { font-family:var(--fd); font-weight:900; font-size:25px; display:flex; align-items:baseline; gap:6px; color:var(--ink); }
+  .beta { font-size:12px; font-weight:500; color:var(--accent); }
+  .tagline { font-size:12.5px; color:var(--muted); margin-top:3px; }
+  .iconbtn { width:38px; height:38px; border-radius:12px; background:var(--surface-2); border:none;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; flex-shrink:0; }
+  .iconbtn.on { background:var(--accent-weak); }
+  .dot { position:absolute; top:8px; right:9px; width:7px; height:7px; border-radius:50%; background:var(--red); }
+  .chips { display:flex; gap:8px; overflow-x:auto; padding:0 16px 12px; }
+  .chip { font-size:12.5px; font-weight:500; padding:7px 14px; border-radius:999px; white-space:nowrap;
+    cursor:pointer; flex-shrink:0; background:transparent; border:1px solid var(--line); color:var(--muted); }
+  .chip.on { border-color:var(--accent); background:var(--accent-weak); color:var(--accent); }
+  .summary { margin:0 16px 10px; width:calc(100% - 32px); cursor:pointer; text-align:left;
+    background:linear-gradient(90deg, var(--red-weak), transparent);
+    border:1px solid color-mix(in srgb, var(--red) 32%, transparent); border-radius:14px; padding:10px 14px;
+    display:flex; align-items:center; gap:10px; color:var(--ink); font-size:12.5px; }
+  .summary.on { border-color:var(--red); }
+  .searchbox { width:calc(100% - 32px); margin:0 16px 12px; padding:9px 12px; border-radius:12px;
+    border:1px solid var(--line); background:var(--surface-1); color:var(--ink);
+    font-family:var(--fb); font-size:13px; outline:none; }
+  .toggle-row { margin:4px 16px 12px; display:flex; align-items:center; gap:6px; background:none; border:none;
+    padding:0; cursor:pointer; font-size:12px; color:var(--dim); }
+  .toggle-row.on { color:var(--accent); }
+  .foryou { border-bottom:1px solid var(--line); margin-bottom:8px; }
+  .foryou-h { padding:2px 16px 8px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+    font-family:var(--fd); font-weight:700; font-size:13px; color:var(--ink); }
+  .foryou-tags { font-family:var(--fb); font-weight:400; font-size:11px; color:var(--dim); }
+  .foryou-empty { margin:0 16px 12px; font-size:11.5px; color:var(--dim); }
+  .list { padding:0 16px 20px; display:flex; flex-direction:column; gap:10px; }
+  .card { background:var(--card); border-radius:18px; display:flex; overflow:hidden; box-shadow:var(--shadow); }
+  .card-ic { width:58px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:23px; background:var(--surface-1); }
+  .perf { position:relative; width:0; }
+  .perf i { position:absolute; top:-1px; bottom:-1px; left:-1px; border-left:2px dashed var(--perf-line); }
+  .perf b { position:absolute; left:-9px; width:16px; height:16px; border-radius:50%; background:var(--notch); }
+  .perf b.t { top:-8px; } .perf b.b { bottom:-8px; }
+  .card-main { flex:1; padding:12px 14px; min-width:0; }
+  .card-main-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+  .svc { font-size:11px; color:var(--muted); letter-spacing:.5px; }
+  .ttl { font-family:var(--fd); font-weight:700; font-size:15px; margin-top:2px; line-height:1.3; color:var(--ink); }
+  .dtl { font-size:12px; color:var(--dim); margin-top:3px; }
+  .row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .pill { display:flex; align-items:center; gap:4px; border-radius:999px; padding:3px 9px; font-size:11px; border:1px solid; }
+  .pill .num { font-family:var(--fm); font-weight:700; font-size:12px; }
+  .tag-cat { font-size:11px; color:var(--dim); background:var(--surface-2); border-radius:999px; padding:3px 9px; }
+  .tag-match { font-size:11px; color:var(--accent); background:var(--accent-weak); border-radius:999px; padding:3px 9px; }
+  .mini { background:none; border:none; padding:4px; cursor:pointer; display:flex; flex-shrink:0; }
+  .cardactions { display:flex; gap:8px; margin-top:10px; }
+  .cardactions button { flex:1; min-width:0; font-size:11px; font-weight:700; padding:7px 6px; border-radius:10px;
+    border:1px solid var(--line); background:var(--surface-1); color:var(--dim); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:4px; white-space:nowrap; }
+  .cardactions button.on { color:var(--accent); border-color:color-mix(in srgb, var(--accent) 45%, transparent); background:var(--accent-weak); }
+  .personal { margin-top:10px; background:var(--accent-weak); border:1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-radius:12px; padding:9px 11px; font-size:12px; color:var(--accent); line-height:1.7; }
+  .personal .big { font-family:var(--fm); font-weight:700; }
+  .personal .warn { color:var(--amber); }
+  .nav { display:flex; justify-content:space-around; padding:10px 8px 16px; border-top:1px solid var(--line); background:var(--nav-bg); }
+  .nav div { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; color:var(--dim); font-size:10px; }
+  .nav div.on { color:var(--accent); }
+  .empty { text-align:center; color:var(--dim); font-size:13px; margin-top:36px; padding:0 24px; line-height:1.8; }
+  .screen-h { padding:20px 16px 6px; font-family:var(--fd); font-weight:900; font-size:20px; color:var(--ink); }
+  .screen-sub { padding:0 16px 14px; font-size:12px; color:var(--muted); line-height:1.7; }
+  .sect { margin:0 16px 10px; background:var(--card); border-radius:16px; padding:14px 14px 6px; box-shadow:var(--shadow); }
+  .sect h3 { margin:0 0 4px; font-family:var(--fd); font-size:14px; color:var(--ink); }
+  .sect p { margin:0 0 8px; font-size:12px; color:var(--dim); line-height:1.7; }
+  .switch { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0 12px; }
+  .switch span { font-size:13px; color:var(--ink); }
+  .sw { width:44px; height:26px; border-radius:999px; background:var(--surface-3); position:relative; cursor:pointer; flex-shrink:0; transition:background .15s; }
+  .sw.on { background:var(--accent); }
+  .sw i { position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.3); transition:left .15s; }
+  .sw.on i { left:21px; }
+  .seg { display:flex; gap:6px; margin:2px 0 12px; }
+  .seg button { flex:1; font-size:12px; font-weight:700; padding:8px 6px; border-radius:10px; cursor:pointer;
+    border:1px solid var(--line); background:var(--surface-1); color:var(--dim); }
+  .seg button.on { border-color:var(--accent); background:var(--accent-weak); color:var(--accent); }
+  .tagpick { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 12px; }
+  .tagpick button { font-size:12px; padding:7px 12px; border-radius:999px; border:1px solid var(--line);
+    background:transparent; color:var(--dim); cursor:pointer; }
+  .tagpick button.on { border-color:var(--accent); background:var(--accent-weak); color:var(--accent); }
+  .perm { font-size:11.5px; color:var(--dim); padding:2px 0 10px; line-height:1.7; }
+  .overlay { position:absolute; inset:0; background:var(--scrim); display:flex; align-items:flex-end; justify-content:center; z-index:40; }
+  .sheet { width:100%; background:var(--frame); border-radius:22px 22px 0 0; padding:16px 18px 26px;
+    max-height:88%; overflow-y:auto; border-top:1px solid var(--line); }
+  .sheet-h { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .sheet-h b { font-family:var(--fd); font-size:16px; color:var(--ink); }
+  .kv { display:flex; justify-content:space-between; font-size:12.5px; padding:7px 0; border-bottom:1px solid var(--line); color:var(--ink); }
+  .kv span:first-child { color:var(--dim); }
+  .datein { width:100%; margin:8px 0 10px; padding:9px 12px; border-radius:12px; border:1px solid var(--line);
+    background:var(--surface-1); color:var(--ink); font-family:var(--fb); font-size:13px; outline:none; }
+  .fullscreen { position:absolute; inset:0; background:var(--frame); z-index:50; display:flex; flex-direction:column;
+    padding:24px 20px 28px; overflow-y:auto; }
+  .doc h2 { font-family:var(--fd); font-size:18px; margin:0 0 4px; color:var(--ink); }
+  .doc h4 { font-family:var(--fd); font-size:13px; margin:16px 0 4px; color:var(--accent); }
+  .doc p { font-size:12.5px; color:var(--muted); line-height:1.9; margin:0; }
+  .doc ul { margin:4px 0; padding-left:18px; }
+  .doc li { font-size:12.5px; color:var(--muted); line-height:1.9; }
+  .notif-item { display:flex; gap:10px; padding:11px 0; border-bottom:1px solid var(--line); font-size:12.5px; line-height:1.6; color:var(--ink); }
+  .notif-item .bar { width:3px; border-radius:2px; flex-shrink:0; }
+  .notif-item time { display:block; color:var(--dim); font-size:10.5px; margin-top:3px; font-family:var(--fm); }
+  .center-load { display:flex; align-items:center; justify-content:center; gap:8px; color:var(--dim); font-size:13px; height:60vh; }
+  .spin { animation:sp 1s linear infinite; } @keyframes sp { to { transform:rotate(360deg); } }
+  .followrow { display:flex; flex-wrap:wrap; gap:8px; margin:2px 0 12px; }
+  .followrow .fchip { font-size:11.5px; padding:6px 10px; border-radius:999px; background:var(--accent-weak);
+    color:var(--accent); border:1px solid color-mix(in srgb, var(--accent) 35%, transparent); display:flex; align-items:center; gap:6px; }
+  .followrow .fchip button { background:none; border:none; color:var(--accent); cursor:pointer; display:flex; padding:0; }
+</style>
+</head>
+<body>
+<div id="root"><div class="frame"><div class="center-load">読み込み中…</div></div></div>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+<script src="campaigns.js"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useCallback } = React;
+
+/* ============================ 設定・定数 ============================ */
+const STORAGE_KEY = "minogasan.v1";
+const CATEGORIES = window.CATEGORIES || ["すべて"];
+const CAMPAIGNS = (window.CAMPAIGNS || []).slice();
+const SITUATION_TAGS = window.SITUATION_TAGS || [];
+const CAT_EMOJI = { "動画":"🎬", "音楽":"🎵", "雑誌":"📖", "フード":"🍔", "買い物":"🛍️", "くらし":"🏠" };
+const tagLabel = (id) => { const t = SITUATION_TAGS.find(x => x.id === id); return t ? t.label : id; };
+const campaignMatchesTags = (c, ids) => Array.isArray(c.tags) && c.tags.some(t => ids.includes(t));
+
+/* ============================ 日付ユーティリティ ============================ */
+function startOfToday() { const d = new Date(); d.setHours(0,0,0,0); return d; }
+function parseISO(s) { const [y,m,d] = String(s).split("-").map(Number); return new Date(y, m-1, d); }
+function toISO(d) { const p = n => String(n).padStart(2,"0"); return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+function daysUntil(iso) { return Math.round((parseISO(iso) - startOfToday()) / 86400000); }
+function fmtJP(iso) { const d = parseISO(iso); return d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日"; }
+function fmtMD(iso) { const d = parseISO(iso); return (d.getMonth()+1)+"/"+d.getDate(); }
+// ソート用キー：受付締切が近い順 → 通年（締切なし）→ 受付終了、の順で並ぶ
+function sortKey(c) {
+  if (!c.deadline) return 1000000;
+  const d = daysUntil(c.deadline);
+  return d < 0 ? 2000000 + d : d;
+}
+const isUrgent = (c) => !!c.deadline && daysUntil(c.deadline) >= 0 && daysUntil(c.deadline) <= 3;
+function personalEndISO(c, startISO) { return c.freeDays ? toISO(addDays(parseISO(startISO), c.freeDays)) : null; }
+function ago(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return "たった今";
+  if (s < 3600) return Math.floor(s/60) + "分前";
+  if (s < 86400) return Math.floor(s/3600) + "時間前";
+  return Math.floor(s/86400) + "日前";
+}
+
+/* ============================ 状態の保存・読み込み ============================ */
+function defaultState() {
+  return {
+    consentAccepted: false, consentDate: null,
+    onboarded: false,
+    theme: "system",                 // "system" | "light" | "dark"
+    personalizeEnabled: false,
+    favorites: [],                   // キャンペーン単位のお気に入り（id）
+    followedServices: [],            // サービス単位のフォロー（サービス名）
+    followedCategories: [],          // カテゴリ単位のフォロー（カテゴリ名）
+    interestTags: [],                // 関心タグ（SITUATION_TAGS の id）
+    usage: {},                       // { [id]: { startDate: "YYYY-MM-DD" } }
+    notifEnabled: true,
+    notifSent: {},                   // { [id]: ["added","before3"] }  ※1件につき最大2回
+    notifLog: [],
+    notifSeenAt: 0,
+  };
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState();
+    return Object.assign(defaultState(), JSON.parse(raw));
+  } catch (e) { return defaultState(); }
+}
+
+/* ============================ アイコン ============================ */
+const ICONS = {
+  bell: "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9|M10.3 21a1.94 1.94 0 0 0 3.4 0",
+  search: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z|M21 21l-4.35-4.35",
+  home: "M3 10.5 12 3l9 7.5|M5 9.5V21h14V9.5|M10 21v-6h4v6",
+  tag: "M20.6 13.4 13.4 20.6a2 2 0 0 1-2.83 0l-7.17-7.17A2 2 0 0 1 2.8 12V4a1.2 1.2 0 0 1 1.2-1.2h8a2 2 0 0 1 1.41.6l7.19 7.17a2 2 0 0 1 0 2.83z|M7.5 7.5h.01",
+  heart: "M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z",
+  gear: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z|M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.2.61.79 1.05 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z",
+  clock: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z|M12 6.5V12l4 2",
+  flame: "M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z",
+  x: "M18 6 6 18|M6 6l12 12",
+  plus: "M12 5v14|M5 12h14",
+  check: "M20 6 9 17l-5-5",
+  ext: "M15 3h6v6|M10 14 21 3|M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6",
+  cal: "M5 4h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z|M8 2v4|M16 2v4|M3 10h18",
+  chevL: "M15 18l-6-6 6-6",
+};
+function Icon({ name, size = 20, color = "currentColor", fill = "none", sw = 2, style }) {
+  const d = ICONS[name] || "";
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={color}
+      strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" style={style} aria-hidden="true">
+      {d.split("|").map((p, i) => <path key={i} d={p} />)}
+    </svg>
+  );
+}
+
+/* ============================ 緊急度 ============================ */
+function urgencyOf(days) {
+  if (days < 0)  return { c:"var(--faint)", bg:"var(--surface-2)",  bd:"var(--line)",   icon:"clock" };
+  if (days <= 3) return { c:"var(--red)",   bg:"var(--red-weak)",   bd:"var(--red)",    icon:"flame" };
+  if (days <= 7) return { c:"var(--amber)", bg:"var(--amber-weak)", bd:"var(--amber)",  icon:"clock" };
+  return               { c:"var(--accent)", bg:"var(--accent-weak)", bd:"var(--accent)", icon:"clock" };
+}
+function badgeText(days) {
+  if (days < 0) return "受付終了";
+  if (days === 0) return "本日締切";
+  return "残り" + days + "日";
+}
+
+/* ============================ 通知チェック ============================ */
+// アプリを開いたとき／再表示したときに実行。1キャンペーンにつき最大2回（追加時 / 終了3日前）。
+function computeAndApplyNotifications(prev) {
+  if (!prev.consentAccepted || !prev.notifEnabled) return prev;
+  const sent = Object.assign({}, prev.notifSent);
+  const log = prev.notifLog.slice();
+  let changed = false;
+  const canNotify = (typeof Notification !== "undefined") && Notification.permission === "granted";
+
+  for (const c of CAMPAIGNS) {
+    const already = (sent[c.id] || []).slice();
+    const push = (type, level, message) => {
+      if (already.includes(type) || already.length >= 2) return;
+      already.push(type);
+      sent[c.id] = already;
+      log.unshift({ id: c.id + "-" + type + "-" + Date.now(), campaignId: c.id, type, level, message, at: Date.now() });
+      changed = true;
+      if (canNotify) { try { new Notification("見逃さん", { body: message }); } catch (e) {} }
+    };
+
+    // 「フォロー」= キャンペーンお気に入り or サービスフォロー（フォロー中タブに出るもの）
+    const followed = prev.favorites.includes(c.id) || prev.followedServices.includes(c.service);
+    // 「カテゴリの新着通知」= 通知のみ。フォロー中タブには出さない
+    const catSubscribed = prev.followedCategories.includes(c.category);
+    const interested = prev.personalizeEnabled && campaignMatchesTags(c, prev.interestTags);
+
+    // 追加時通知：フォロー中のサービス／新着通知ONのカテゴリ／関心タグに合致 かつ 掲載から3日以内
+    const addedAgo = daysUntil(c.addedAt);
+    if ((followed || catSubscribed || interested) && addedAgo <= 0 && addedAgo >= -3) {
+      push("added", "info", c.service + "に新しいキャンペーン「" + c.title + "」が追加されました。");
+    }
+
+    // 終了3日前通知：フォロー中／利用開始を記録済み／関心に合致するものだけ（カテゴリ通知だけの人には出さない）。
+    // 基準日はユーザーの状態で切り替える（登録済み→個人の終了日、未登録→受付締切日）。
+    const started = prev.usage[c.id] && prev.usage[c.id].startDate;
+    const baseISO = started ? personalEndISO(c, prev.usage[c.id].startDate) : c.deadline;
+    if (baseISO && (started || followed || interested)) {
+      const d = daysUntil(baseISO);
+      if (d >= 0 && d <= 3) {
+        const msg = started
+          ? c.service + " の無料期間が" + (d === 0 ? "本日" : "あと" + d + "日で") + "終了します。解約予定がなければ課金にご注意ください。"
+          : c.service + "「" + c.title + "」の受付締切は" + (d === 0 ? "本日まで" : "あと" + d + "日") + "です。";
+        push("before3", d <= 1 ? "urgent" : "warn", msg);
+      }
+    }
+  }
+  if (!changed) return prev;
+  return Object.assign({}, prev, { notifSent: sent, notifLog: log.slice(0, 40) });
+}
+
+/* ============================ ルート ============================ */
+function App() {
+  const [state, setStateRaw] = useState(loadState);
+  const [saveError, setSaveError] = useState(false);
+  const [tab, setTab] = useState("home");
+  const [category, setCategory] = useState("すべて");
+  const [detailId, setDetailId] = useState(null);
+  const [doc, setDoc] = useState(null);          // "disclaimer" | "privacy"
+  const [showNotif, setShowNotif] = useState(false);
+
+  const set = useCallback((patch) => {
+    setStateRaw(prev => {
+      const partial = typeof patch === "function" ? patch(prev) : patch;
+      if (!partial || partial === prev) return prev;          // 変更なし
+      const next = Object.assign({}, prev, partial);          // 常に既存の状態にマージ
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); setSaveError(false); }
+      catch (e) { setSaveError(true); }
+      return next;
+    });
+  }, []);
+
+  // テーマ適用
+  useEffect(() => {
+    const t = state.theme || "system";
+    const el = document.documentElement;
+    if (t === "system") el.removeAttribute("data-theme");
+    else el.setAttribute("data-theme", t);
+  }, [state.theme]);
+
+  // 起動時・同意/初期設定の完了直後・再表示時に通知チェック
+  useEffect(() => {
+    set(computeAndApplyNotifications);
+    const onVis = () => { if (!document.hidden) set(computeAndApplyNotifications); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [set, state.consentAccepted, state.onboarded]);
+
+  /* ---- 操作 ---- */
+  const toggleFav = (id) => set(p => ({
+    favorites: p.favorites.includes(id) ? p.favorites.filter(x => x !== id) : p.favorites.concat(id),
+  }));
+  const toggleService = (svc) => set(p => ({
+    followedServices: p.followedServices.includes(svc) ? p.followedServices.filter(x => x !== svc) : p.followedServices.concat(svc),
+  }));
+  const toggleCategory = (cat) => set(p => ({
+    followedCategories: p.followedCategories.includes(cat) ? p.followedCategories.filter(x => x !== cat) : p.followedCategories.concat(cat),
+  }));
+  const setUsage = (id, startDate) => set(p => ({ usage: Object.assign({}, p.usage, { [id]: { startDate } }) }));
+  const clearUsage = (id) => set(p => { const u = Object.assign({}, p.usage); delete u[id]; return { usage: u }; });
+  const toggleTag = (tid) => set(p => ({
+    interestTags: p.interestTags.includes(tid) ? p.interestTags.filter(x => x !== tid) : p.interestTags.concat(tid),
+  }));
+
+  // フォロー中タブ／「フォロー中のみ表示」の対象：キャンペーンお気に入り or サービスフォローのみ。
+  // カテゴリの新着通知（followedCategories）は通知専用なのでここには含めない。
+  const followMatch = (c) =>
+    state.favorites.includes(c.id) ||
+    state.followedServices.includes(c.service);
+  const interestMatch = (c) =>
+    state.personalizeEnabled && state.interestTags.length > 0 && campaignMatchesTags(c, state.interestTags);
+
+  const s = { state, set, toggleFav, toggleService, toggleCategory, setUsage, clearUsage, toggleTag, followMatch, interestMatch, setDetailId };
+
+  /* ---- 同意ゲート ---- */
+  if (!state.consentAccepted) return <ConsentScreen onAccept={() => set({ consentAccepted: true, consentDate: toISO(startOfToday()) })} openDoc={setDoc} doc={doc} />;
+  if (!state.onboarded) return <Onboarding s={s} />;
+
+  const unseen = state.notifLog.some(n => n.at > (state.notifSeenAt || 0));
+
+  return (
+    <div className="frame">
+      <div className="body">
+        {tab === "home" && <HomeScreen s={s} category={category} setCategory={setCategory}
+          onBell={() => { setShowNotif(true); set({ notifSeenAt: Date.now() }); }} unseen={unseen} />}
+        {tab === "category" && <CategoryScreen s={s} goHome={(cat) => { setCategory(cat); setTab("home"); }} />}
+        {tab === "favorites" && <FavoritesScreen s={s} />}
+        {tab === "settings" && <SettingsScreen s={s} openDoc={setDoc} />}
+        {saveError && <div style={{ textAlign:"center", color:"var(--red)", fontSize:11, padding:"4px 0 12px" }}>保存に失敗しました。空き容量をご確認ください</div>}
+      </div>
+
+      <nav className="nav">
+        {[
+          { k:"home", ic:"home", label:"ホーム" },
+          { k:"category", ic:"tag", label:"カテゴリ" },
+          { k:"favorites", ic:"heart", label:"フォロー中" },
+          { k:"settings", ic:"gear", label:"設定" },
+        ].map(it => (
+          <div key={it.k} className={tab === it.k ? "on" : ""} onClick={() => setTab(it.k)}>
+            <Icon name={it.ic} size={19} color={tab === it.k ? "var(--accent)" : "var(--dim)"} />
+            <span>{it.label}</span>
+          </div>
+        ))}
+      </nav>
+
+      {detailId != null && (
+        <DetailSheet s={s} c={CAMPAIGNS.find(x => x.id === detailId)} onClose={() => setDetailId(null)} />
+      )}
+      {showNotif && <NotifSheet log={state.notifLog} onClose={() => setShowNotif(false)} />}
+      {doc && <DocScreen kind={doc} onClose={() => setDoc(null)} />}
+    </div>
+  );
+}
+
+/* ============================ ホーム ============================ */
+function HomeScreen({ s, category, setCategory, onBell, unseen }) {
+  const { state } = s;
+  const [showSearch, setShowSearch] = useState(false);
+  const [query, setQuery] = useState("");
+  const [urgentOnly, setUrgentOnly] = useState(false);
+  const [followOnly, setFollowOnly] = useState(false);
+
+  const byUrgency = (a, b) => sortKey(a) - sortKey(b);
+  const notEnded = (c) => !c.deadline || daysUntil(c.deadline) >= 0;
+
+  const q = query.trim().toLowerCase();
+  const personalizedActive = state.personalizeEnabled && state.interestTags.length > 0;
+  const forYou = personalizedActive
+    ? CAMPAIGNS.filter(c => campaignMatchesTags(c, state.interestTags) && notEnded(c)).sort(byUrgency)
+    : [];
+  const showForYou = personalizedActive && !q && !followOnly && !urgentOnly && category === "すべて" && forYou.length > 0;
+  const forYouShown = forYou.slice(0, 6);
+  const forYouIds = new Set(showForYou ? forYouShown.map(c => c.id) : []);
+
+  let list = CAMPAIGNS.slice();
+  if (category !== "すべて") list = list.filter(c => c.category === category);
+  if (followOnly) list = list.filter(c => s.followMatch(c));
+  if (urgentOnly) list = list.filter(isUrgent);
+  if (q) list = list.filter(c => c.service.toLowerCase().includes(q) || c.title.toLowerCase().includes(q));
+  if (showForYou) list = list.filter(c => !forYouIds.has(c.id));
+  list.sort(byUrgency);
+
+  const urgentCount = CAMPAIGNS.filter(isUrgent).length;
+
+  return (
+    <div>
+      <div className="head">
+        <div className="head-top">
+          <div>
+            <div className="h-title">見逃さん<span className="beta">β</span></div>
+            <div className="tagline">サブスクのお得、逃さずキャッチ。</div>
+          </div>
+          <div style={{ display:"flex", gap:8 }}>
+            <button className={"iconbtn" + (showSearch ? " on" : "")} onClick={() => setShowSearch(v => !v)} aria-label="検索">
+              <Icon name={showSearch ? "x" : "search"} size={17} color="var(--ink)" />
+            </button>
+            <button className="iconbtn" onClick={onBell} aria-label="通知">
+              <Icon name="bell" size={17} color="var(--ink)" />
+              {unseen && <span className="dot" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {showSearch && (
+        <input className="searchbox" autoFocus value={query} onChange={e => setQuery(e.target.value)}
+          placeholder="サービス名・キャンペーン名で検索" />
+      )}
+
+      <button className={"summary" + (urgentOnly ? " on" : "")} onClick={() => setUrgentOnly(v => !v)}>
+        <Icon name="flame" size={16} color="var(--red)" />
+        <span>
+          まもなく終了のキャンペーンが <b style={{ color:"var(--red)", fontWeight:700 }}>{urgentCount}件</b> あります
+          {urgentOnly ? "（絞り込み中・タップで解除）" : ""}
+        </span>
+      </button>
+
+      {showForYou && (
+        <div className="foryou">
+          <div className="foryou-h">
+            <Icon name="heart" size={13} color="var(--accent)" fill="var(--accent)" />
+            あなた向け
+            <span className="foryou-tags">{state.interestTags.map(tagLabel).join("・")}</span>
+          </div>
+          <div className="list" style={{ paddingTop:0, paddingBottom:12 }}>
+            {forYouShown.map(c => <CampaignCard key={c.id} c={c} s={s} />)}
+          </div>
+        </div>
+      )}
+      {personalizedActive && !q && !followOnly && !urgentOnly && category === "すべて" && forYou.length === 0 && (
+        <div className="foryou-empty">選んだ関心に合うキャンペーンは今はありません。追加され次第、ここと通知でお知らせします。</div>
+      )}
+
+      <div className="chips">
+        {CATEGORIES.map(cat => (
+          <button key={cat} className={"chip" + (category === cat ? " on" : "")} onClick={() => setCategory(cat)}>{cat}</button>
+        ))}
+      </div>
+
+      <button className={"toggle-row" + (followOnly ? " on" : "")} onClick={() => setFollowOnly(v => !v)}>
+        <Icon name="heart" size={13} color={followOnly ? "var(--accent)" : "var(--dim)"} fill={followOnly ? "var(--accent)" : "none"} />
+        {followOnly ? "フォロー中のみ表示中" : "フォロー中のみ表示"}
+      </button>
+
+      <List list={list} s={s} emptyText={followOnly ? "フォロー中のキャンペーンはまだありません" : "このカテゴリのキャンペーンはまだありません"} />
+    </div>
+  );
+}
+
+/* ============================ カテゴリ ============================ */
+function CategoryScreen({ s, goHome }) {
+  const { state } = s;
+  return (
+    <div>
+      <div className="screen-h">カテゴリ</div>
+      <div className="screen-sub">カテゴリ名をタップすると一覧に移動します。「新着を通知」は、そのカテゴリに新しいキャンペーンが追加されたときの通知だけを受け取る設定です（「フォロー中」には入りません）。</div>
+      <div className="list">
+        {CATEGORIES.filter(c => c !== "すべて").map(cat => {
+          const count = CAMPAIGNS.filter(c => c.category === cat).length;
+          const followed = state.followedCategories.includes(cat);
+          return (
+            <div key={cat} className="card" style={{ alignItems:"center", padding:"12px 14px", gap:12 }}>
+              <div style={{ fontSize:22 }}>{CAT_EMOJI[cat] || "🎟️"}</div>
+              <div style={{ flex:1, minWidth:0 }} onClick={() => goHome(cat)}>
+                <div className="ttl" style={{ marginTop:0 }}>{cat}</div>
+                <div className="dtl">{count}件のキャンペーン</div>
+              </div>
+              <button style={{
+                fontSize:11.5, fontWeight:700, padding:"7px 10px", borderRadius:10, cursor:"pointer", flexShrink:0,
+                border:"1px solid " + (followed ? "color-mix(in srgb, var(--accent) 45%, transparent)" : "var(--line)"),
+                background: followed ? "var(--accent-weak)" : "var(--surface-1)",
+                color: followed ? "var(--accent)" : "var(--dim)",
+              }} onClick={() => s.toggleCategory(cat)}>
+                {followed ? "新着通知ON" : "新着を通知"}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ============================ フォロー中 ============================ */
+function FavoritesScreen({ s }) {
+  const { state } = s;
+  const list = CAMPAIGNS.filter(c => s.followMatch(c)).sort((a, b) => sortKey(a) - sortKey(b));
+  return (
+    <div>
+      <div className="screen-h">フォロー中</div>
+      <div className="screen-sub">お気に入りにしたキャンペーンと、フォロー中のサービスに該当するものをまとめて表示します。</div>
+      {state.followedServices.length > 0 && (
+        <div style={{ padding:"0 16px" }}>
+          <div className="followrow">
+            {state.followedServices.map(svc => (
+              <span key={svc} className="fchip">{svc}
+                <button onClick={() => s.toggleService(svc)} aria-label="解除"><Icon name="x" size={12} color="var(--accent)" /></button>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      <List list={list} s={s} emptyText={"まだフォローしていません。\nキャンペーンの♡か、カードの「フォロー」から追加できます。"} />
+    </div>
+  );
+}
+
+/* ============================ 一覧・カード ============================ */
+function List({ list, s, emptyText }) {
+  if (!list.length) return <div className="empty">{emptyText}</div>;
+  return (
+    <div className="list">
+      {list.map(c => <CampaignCard key={c.id} c={c} s={s} />)}
+    </div>
+  );
+}
+
+function CampaignCard({ c, s }) {
+  const { state } = s;
+  const isFav = state.favorites.includes(c.id);
+  const svcFollowed = state.followedServices.includes(c.service);
+  const started = state.usage[c.id] && state.usage[c.id].startDate;
+  const days = c.deadline ? daysUntil(c.deadline) : null;
+  const u = days === null ? null : urgencyOf(days);
+  const matched = s.interestMatch(c);
+
+  const endISO = started ? personalEndISO(c, state.usage[c.id].startDate) : null;
+  const endLeft = endISO ? daysUntil(endISO) : null;
+
+  return (
+    <div className="card">
+      <div className="card-ic">{c.icon}</div>
+      <div className="perf"><i /><b className="t" /><b className="b" /></div>
+      <div className="card-main">
+        <div className="card-main-top">
+          <div style={{ minWidth:0, cursor:"pointer" }} onClick={() => s.setDetailId(c.id)}>
+            <div className="svc">{c.service}</div>
+            <div className="ttl">{c.title}</div>
+            <div className="dtl">{c.detail}</div>
+          </div>
+          <button className="mini" onClick={() => s.toggleFav(c.id)} aria-label={isFav ? "お気に入りから外す" : "お気に入りに追加"}>
+            <Icon name="heart" size={18} color={isFav ? "var(--red)" : "var(--faint)"} fill={isFav ? "var(--red)" : "none"} />
+          </button>
+        </div>
+
+        {started && endISO ? (
+          <div className="personal">
+            <div>あなたの無料期間終了日：<span className="big">{fmtJP(endISO)}</span></div>
+            <div className={endLeft <= 1 ? "warn" : ""}>
+              {endLeft < 0 ? "無料期間は終了しました" : endLeft === 0 ? "本日で終了。解約するなら今日中に。" : "あと " + endLeft + " 日（解約し忘れに注意）"}
+            </div>
+          </div>
+        ) : (
+          <div className="row">
+            {u ? (
+              <div className="pill" style={{ color:u.c, background:u.bg, borderColor:u.bd }}>
+                <Icon name={u.icon} size={12} color={u.c} />
+                <span className="num">{badgeText(days)}</span>
+              </div>
+            ) : (
+              <div className="pill" style={{ color:"var(--dim)", background:"var(--surface-2)", borderColor:"var(--line)" }}>
+                <Icon name="clock" size={12} color="var(--dim)" />
+                <span className="num">通年</span>
+              </div>
+            )}
+            <span className="tag-cat">{c.category}</span>
+            {matched && <span className="tag-match">関心に合致</span>}
+            {c.lastChecked && <span className="tag-cat" title={"情報の確認日" + (c.source ? "・出どころ: " + c.source : "")}>✓ {fmtMD(c.lastChecked)} 確認</span>}
+          </div>
+        )}
+
+        <div className="cardactions">
+          <button className={svcFollowed ? "on" : ""} onClick={() => s.toggleService(c.service)}>
+            <Icon name={svcFollowed ? "check" : "plus"} size={13} color={svcFollowed ? "var(--accent)" : "var(--dim)"} />
+            {svcFollowed ? "フォロー中" : "フォロー"}
+          </button>
+          {c.hasCancellation && (
+            <button className={started ? "on" : ""} onClick={() => s.setDetailId(c.id)}>
+              <Icon name="cal" size={13} color={started ? "var(--accent)" : "var(--dim)"} />
+              {started ? "開始日 " + (state.usage[c.id].startDate.slice(5).replace("-", "/")) : "開始日を記録"}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================ 詳細シート ============================ */
+function DetailSheet({ s, c, onClose }) {
+  const { state } = s;
+  const started = c && state.usage[c.id] && state.usage[c.id].startDate;
+  const [draft, setDraft] = useState(started || toISO(startOfToday()));
+  if (!c) return null;
+  const days = c.deadline ? daysUntil(c.deadline) : null;
+  const endISO = started ? personalEndISO(c, state.usage[c.id].startDate) : null;
+
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="sheet" onClick={e => e.stopPropagation()}>
+        <div className="sheet-h">
+          <b>{c.icon} {c.service}</b>
+          <button className="iconbtn" onClick={onClose} aria-label="閉じる"><Icon name="x" size={16} color="var(--ink)" /></button>
+        </div>
+        <div className="ttl" style={{ fontSize:16, marginTop:0 }}>{c.title}</div>
+        <div className="dtl" style={{ marginBottom:6 }}>{c.detail}</div>
+
+        <div className="kv"><span>受付締切</span><span>{c.deadline ? fmtJP(c.deadline) + "（" + badgeText(days) + "）" : "終了日の告知なし（通年）"}</span></div>
+        {c.freeDays && <div className="kv"><span>無料期間の長さ</span><span>{c.freeDays}日</span></div>}
+        <div className="kv"><span>カテゴリ</span><span>{c.category}</span></div>
+        {Array.isArray(c.tags) && c.tags.length > 0 && (
+          <div className="kv"><span>関連する状況</span><span>{c.tags.map(tagLabel).join("・")}</span></div>
+        )}
+        <div className="kv"><span>情報の確認</span><span>{c.lastChecked ? fmtJP(c.lastChecked) + "（" + (c.source || "公式") + "）" : "未確認（サンプルデータ）"}</span></div>
+        {endISO && <div className="kv"><span>あなたの無料期間終了日</span><span style={{ color:"var(--accent)" }}>{fmtJP(endISO)}</span></div>}
+
+        <a className="btn btn-ghost" style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, textDecoration:"none", margin:"12px 0" }}
+          href={c.url} target="_blank" rel="noopener noreferrer">
+          <Icon name="ext" size={15} color="var(--ink)" /> 公式サイトで詳細・条件を確認
+        </a>
+
+        {c.hasCancellation && (
+          <div className="sect" style={{ margin:"0 0 10px", boxShadow:"none" }}>
+            <h3>利用開始日を記録</h3>
+            <p>登録した日を記録すると、無料期間の長さ（{c.freeDays || "―"}日）から「あなたの無料期間終了日」を計算し、終了3日前にリマインドします。</p>
+            <input className="datein" type="date" value={draft} max={toISO(startOfToday())} onChange={e => setDraft(e.target.value)} />
+            <div style={{ display:"flex", gap:8, marginBottom:8 }}>
+              <button className="btn btn-primary" onClick={() => { s.setUsage(c.id, draft); onClose(); }}>この日で記録する</button>
+              {started && <button className="btn btn-danger" onClick={() => { s.clearUsage(c.id); onClose(); }}>記録を消す</button>}
+            </div>
+          </div>
+        )}
+
+        <div style={{ display:"flex", gap:8 }}>
+          <button className="btn btn-ghost" onClick={() => s.toggleFav(c.id)}>
+            {state.favorites.includes(c.id) ? "♡ お気に入り解除" : "♡ お気に入り"}
+          </button>
+          <button className="btn btn-ghost" onClick={() => s.toggleService(c.service)}>
+            {state.followedServices.includes(c.service) ? "フォロー解除" : "サービスをフォロー"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================ 通知シート ============================ */
+function NotifSheet({ log, onClose }) {
+  const colorFor = l => l === "urgent" ? "var(--red)" : l === "warn" ? "var(--amber)" : "var(--accent)";
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="sheet" onClick={e => e.stopPropagation()}>
+        <div className="sheet-h">
+          <b>通知</b>
+          <button className="iconbtn" onClick={onClose} aria-label="閉じる"><Icon name="x" size={16} color="var(--ink)" /></button>
+        </div>
+        {!log.length ? (
+          <div className="empty" style={{ marginTop:12 }}>通知はまだありません</div>
+        ) : log.map(n => (
+          <div className="notif-item" key={n.id}>
+            <div className="bar" style={{ background: colorFor(n.level) }} />
+            <div>
+              {n.message}
+              <time>{ago(n.at)}</time>
+            </div>
+          </div>
+        ))}
+        <p style={{ fontSize:11, color:"var(--dim)", marginTop:12, lineHeight:1.7 }}>
+          この方式では、アプリを開いたときに通知の条件をチェックします。閉じている間も届く確実なプッシュ通知は、今後のネイティブ版で対応予定です。
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ============================ 同意画面 ============================ */
+function ConsentScreen({ onAccept, openDoc, doc }) {
+  const [checked, setChecked] = useState(false);
+  return (
+    <div className="frame">
+      {doc && <DocScreen kind={doc} onClose={() => openDoc(null)} />}
+      <div className="fullscreen doc" style={{ position:"relative", zIndex:1 }}>
+        <div className="h-title" style={{ fontSize:24 }}>見逃さん<span className="beta">β</span></div>
+        <p style={{ margin:"6px 0 14px" }}>サブスク・キャッシュレス決済の「無料期間」「割引」を見逃さないためのアプリです。ご利用の前に以下をご確認ください。</p>
+
+        <h4>免責事項</h4>
+        <ul>
+          <li>掲載情報は参考です。最新・正確な条件は必ず各サービスの<b>公式サイト</b>でご確認ください。</li>
+          <li>掲載情報をもとに行動した結果生じた損害（解約し忘れによる課金など）について、運営は責任を負いません。</li>
+          <li>各社公式サイトの文章は転載していません。内容は運営が独自に要約しています。</li>
+        </ul>
+
+        <h4>データの取り扱い</h4>
+        <ul>
+          <li>お気に入り・フォロー・利用開始日・関心カテゴリ・通知設定は、<b>すべてこの端末内（ブラウザ）にのみ保存</b>され、サーバーには送信されません。</li>
+          <li>広告目的での外部提供・第三者提供は行いません。</li>
+          <li>「いつどのサブスクに登録したか」はプライベート性の高い情報です。設定画面からいつでも全データを削除できます。</li>
+          <li>関心カテゴリは本人が任意で選んだ情報のみを使い、性別・年代などのセンシティブな属性の取得や、行動履歴からの推定は行いません。</li>
+        </ul>
+        <p style={{ marginTop:10 }}>
+          <button className="link" onClick={() => openDoc("disclaimer")}>免責事項の全文</button>{"　"}
+          <button className="link" onClick={() => openDoc("privacy")}>プライバシーポリシー</button>
+        </p>
+
+        <label style={{ display:"flex", alignItems:"center", gap:10, margin:"18px 0 12px", fontSize:13, color:"var(--ink)" }}>
+          <input type="checkbox" checked={checked} onChange={e => setChecked(e.target.checked)} style={{ width:18, height:18 }} />
+          上記の内容に同意します
+        </label>
+        <button className="btn btn-primary" disabled={!checked} onClick={onAccept}>同意してはじめる</button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================ オンボーディング ============================ */
+function Onboarding({ s }) {
+  const [picked, setPicked] = useState([]);
+  const finish = (enable) => {
+    s.set({ onboarded: true, personalizeEnabled: enable && picked.length > 0, interestTags: enable ? picked : [] });
+  };
+  const toggle = (id) => setPicked(p => p.includes(id) ? p.filter(x => x !== id) : p.concat(id));
+  return (
+    <div className="frame">
+      <div className="fullscreen doc">
+        <h2>あなたに合うお得を届けます（任意）</h2>
+        <p>
+          何も入力しなくても、全国共通の一般キャンペーンはこのまま届きます。<br />
+          「こういう状況・関心がある」を選んでおくと、関係の深いキャンペーンをホームの「あなた向け」と<b>新着通知</b>でお知らせします。あとから設定画面でいつでも変更・解除できます。
+        </p>
+        <div className="tagpick">
+          {SITUATION_TAGS.map(t => (
+            <button key={t.id} className={picked.includes(t.id) ? "on" : ""} onClick={() => toggle(t.id)}>{t.label}</button>
+          ))}
+        </div>
+        <p style={{ fontSize:11.5, color:"var(--dim)" }}>関心カテゴリは通知や表示の出し分けにのみ使用し、広告販売や外部提供には使いません。</p>
+        <div style={{ flex:1 }} />
+        <button className="btn btn-primary" style={{ marginBottom:8 }} onClick={() => finish(true)}>
+          {picked.length ? "これで始める（" + picked.length + "件選択中）" : "選択して始める"}
+        </button>
+        <button className="btn btn-ghost" onClick={() => finish(false)}>入力せずに始める</button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================ 設定 ============================ */
+function SettingsScreen({ s, openDoc }) {
+  const { state, set } = s;
+  const [perm, setPerm] = useState(typeof Notification !== "undefined" ? Notification.permission : "unsupported");
+  const [confirmWipe, setConfirmWipe] = useState(false);
+
+  const requestPerm = () => {
+    if (typeof Notification === "undefined") return;
+    Promise.resolve(Notification.requestPermission()).then(p => {
+      setPerm(p);
+      set(computeAndApplyNotifications);
+    });
+  };
+  const wipe = () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    set(() => defaultState());
+  };
+
+  const theme = state.theme || "system";
+
+  return (
+    <div>
+      <div className="screen-h">設定</div>
+
+      <div className="sect">
+        <h3>表示テーマ</h3>
+        <p>端末の設定に合わせるか、明るい／暗いを固定できます。</p>
+        <div className="seg">
+          {[["system","端末に合わせる"],["light","ライト"],["dark","ダーク"]].map(([v, label]) => (
+            <button key={v} className={theme === v ? "on" : ""} onClick={() => set({ theme: v })}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="sect">
+        <h3>通知</h3>
+        <div className="switch">
+          <span>終了間近・新着のリマインド</span>
+          <div className={"sw" + (state.notifEnabled ? " on" : "")} onClick={() => set({ notifEnabled: !state.notifEnabled })}><i /></div>
+        </div>
+        <p>1つのキャンペーンにつき最大2回（新着追加時／終了3日前）まで通知します。終了3日前の基準日は、利用開始日を記録している場合は「あなたの無料期間終了日」、していない場合は「受付締切日」です。</p>
+        <div className="perm">
+          ブラウザ通知：{perm === "granted" ? "許可済み" : perm === "denied" ? "ブロック中（ブラウザの設定から許可してください）" : perm === "unsupported" ? "この環境では利用できません" : "未許可"}
+        </div>
+        {perm === "default" && <button className="btn btn-ghost" style={{ marginBottom:10 }} onClick={requestPerm}>ブラウザ通知を許可する</button>}
+        <button className="btn btn-ghost" style={{ marginBottom:10 }} onClick={() => set(computeAndApplyNotifications)}>今すぐ通知をチェック</button>
+        {state.followedCategories.length > 0 && (
+          <div style={{ marginBottom:6 }}>
+            <div className="perm" style={{ paddingBottom:4 }}>新着通知中のカテゴリ</div>
+            <div className="followrow">
+              {state.followedCategories.map(cat => (
+                <span key={cat} className="fchip">#{cat}
+                  <button onClick={() => s.toggleCategory(cat)} aria-label="解除"><Icon name="x" size={12} color="var(--accent)" /></button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="sect">
+        <h3>パーソナライズ（関心カテゴリ）</h3>
+        <div className="switch">
+          <span>関心に合わせた表示・通知を使う</span>
+          <div className={"sw" + (state.personalizeEnabled ? " on" : "")} onClick={() => set({ personalizeEnabled: !state.personalizeEnabled })}><i /></div>
+        </div>
+        <p>本人が選んだ「状況・関心」タグのみを使い、ホームの「あなた向け」表示と新着通知の出し分けに利用します。推定は行わず、広告販売・外部提供にも使いません。</p>
+        {state.personalizeEnabled && (
+          <div className="tagpick">
+            {SITUATION_TAGS.map(t => (
+              <button key={t.id} className={state.interestTags.includes(t.id) ? "on" : ""} onClick={() => s.toggleTag(t.id)}>{t.label}</button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="sect">
+        <h3>データと規約</h3>
+        <p>登録内容はこの端末内にのみ保存されています。</p>
+        <button className="btn btn-ghost" style={{ marginBottom:8 }} onClick={() => openDoc("disclaimer")}>免責事項を見る</button>
+        <button className="btn btn-ghost" style={{ marginBottom:8 }} onClick={() => openDoc("privacy")}>プライバシーポリシーを見る</button>
+        {!confirmWipe ? (
+          <button className="btn btn-danger" style={{ marginBottom:8 }} onClick={() => setConfirmWipe(true)}>登録データをすべて削除</button>
+        ) : (
+          <div style={{ marginBottom:8 }}>
+            <p style={{ color:"var(--red)" }}>お気に入り・フォロー・利用開始日・関心カテゴリ・通知履歴をすべて削除します。元に戻せません。</p>
+            <div style={{ display:"flex", gap:8 }}>
+              <button className="btn btn-danger" onClick={wipe}>削除する</button>
+              <button className="btn btn-ghost" onClick={() => setConfirmWipe(false)}>やめる</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ textAlign:"center", color:"var(--faint)", fontSize:11, padding:"6px 0 20px", lineHeight:1.8 }}>
+        見逃さん β（v1）<br />データはこの端末内に保存 / アカウント不要<br />
+        掲載: {CAMPAIGNS.length}件
+      </div>
+    </div>
+  );
+}
+
+/* ============================ 規約ドキュメント ============================ */
+function DocScreen({ kind, onClose }) {
+  return (
+    <div className="fullscreen doc">
+      <button className="iconbtn" style={{ alignSelf:"flex-start", marginBottom:12 }} onClick={onClose} aria-label="戻る">
+        <Icon name="chevL" size={18} color="var(--ink)" />
+      </button>
+      {kind === "disclaimer" ? (
+        <div>
+          <h2>免責事項</h2>
+          <h4>情報の正確性について</h4>
+          <p>本アプリに掲載しているキャンペーン情報・日付・条件は、掲載時点で運営が確認した参考情報です。内容は予告なく変更・終了されることがあります。実際に登録・利用する前に、必ず各サービスの公式サイトで最新かつ正確な条件（対象者、受付期間、無料期間、解約条件など）をご確認ください。</p>
+          <h4>損害の免責</h4>
+          <p>本アプリの掲載情報や通知を信頼して行動した結果生じたいかなる損害（解約し忘れによる課金、キャンペーン対象外だった場合の不利益など）についても、運営は責任を負いません。通知はアプリを開いたタイミングで判定するため、必ず届くことを保証するものではありません。</p>
+          <h4>著作権への配慮</h4>
+          <p>各社公式サイトの文章をそのまま転載することはしていません。掲載しているキャンペーンの説明文は、運営が公式情報を確認したうえで独自の言葉に要約したものです。</p>
+        </div>
+      ) : (
+        <div>
+          <h2>プライバシーポリシー</h2>
+          <h4>取得する情報</h4>
+          <p>本アプリは、お気に入りにしたキャンペーン、フォローしたサービス／カテゴリ、記録した利用開始日、選択した関心カテゴリ、表示テーマ、通知のオン／オフ設定、通知履歴を保存します。氏名・メールアドレス・電話番号・アカウントは取得しません。</p>
+          <h4>保存場所</h4>
+          <p>上記の情報はすべて、お使いの端末のブラウザ内（localStorage）にのみ保存されます。運営のサーバーや第三者へ送信・保存されることはありません。</p>
+          <h4>利用目的</h4>
+          <p>アプリ内での一覧表示、フォロー中の絞り込み、終了3日前などのリマインド判定、関心カテゴリに基づく「あなた向け」表示と新着通知の出し分けにのみ利用します。</p>
+          <h4>第三者提供</h4>
+          <p>取得した情報を広告目的で外部に提供したり、第三者に販売・提供したりすることはありません。</p>
+          <h4>関心カテゴリについて</h4>
+          <p>関心・状況カテゴリは、利用者本人が任意で選択した情報のみを使用します。性別・年代などのセンシティブな属性は取得せず、行動履歴などからの推定も行いません。カテゴリはいつでも追加・変更・解除できます。</p>
+          <h4>データの削除</h4>
+          <p>設定画面の「登録データをすべて削除」から、保存されているすべての情報をいつでも消去できます。ブラウザのサイトデータを消去した場合も同様に削除されます。</p>
+          <h4>注記</h4>
+          <p>「いつどのサブスクに登録したか」という記録は、生活パターンが見えるプライベート性の高い情報です。本アプリは端末内保存のみとし、外部送信しない設計にしています。将来サーバー保存を行う場合は、暗号化などの対策とあわせて、あらためて本ポリシーを更新します。</p>
+        </div>
+      )}
+      <div style={{ flex:1 }} />
+      <button className="btn btn-primary" style={{ marginTop:16 }} onClick={onClose}>閉じる</button>
+    </div>
+  );
+}
+
+/* ============================ マウント ============================ */
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+
+<script>
+  /* PWA: Service Worker 登録（https または localhost でのみ有効） */
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("./sw.js").catch(function () {});
+    });
+  }
+</script>
+</body>
+</html>
