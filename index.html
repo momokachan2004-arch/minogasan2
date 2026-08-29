@@ -674,7 +674,11 @@ function CampaignCard({ c, s }) {
             )}
             <span className="tag-cat">{c.category}</span>
             {matched && <span className="tag-match">関心に合致</span>}
-            {c.lastChecked && <span className="tag-cat" title={"情報の確認日" + (c.source ? "・出どころ: " + c.source : "")}>✓ {fmtMD(c.lastChecked)} 確認</span>}
+            {c.lastChecked && (
+              c.source === "公式"
+                ? <span className="tag-match" title={"公式サイトで確認: " + fmtMD(c.lastChecked)}>✓ {fmtMD(c.lastChecked)} 公式確認</span>
+                : <span className="tag-cat" title={"出どころ: " + (c.source || "不明") + "（要公式確認）"}>{fmtMD(c.lastChecked)} 調査</span>
+            )}
           </div>
         )}
 
@@ -720,7 +724,7 @@ function DetailSheet({ s, c, onClose }) {
         {Array.isArray(c.tags) && c.tags.length > 0 && (
           <div className="kv"><span>関連する状況</span><span>{c.tags.map(tagLabel).join("・")}</span></div>
         )}
-        <div className="kv"><span>情報の確認</span><span>{c.lastChecked ? fmtJP(c.lastChecked) + "（" + (c.source || "公式") + "）" : "未確認（サンプルデータ）"}</span></div>
+        <div className="kv"><span>情報の確認</span><span>{c.lastChecked ? fmtJP(c.lastChecked) + "（" + (c.source || "公式") + "）" : "未確認"}</span></div>
         {endISO && <div className="kv"><span>あなたの無料期間終了日</span><span style={{ color:"var(--accent)" }}>{fmtJP(endISO)}</span></div>}
 
         <a className="btn btn-ghost" style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, textDecoration:"none", margin:"12px 0" }}
