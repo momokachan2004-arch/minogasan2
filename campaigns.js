@@ -51,6 +51,8 @@ window.SITUATION_TAGS = [
 window.CAMPAIGNS = [
   /* ---- 全国共通の一般キャンペーン ---- */
   {
+    // 2026-08-29 定期巡回：本セッションのネットワーク制限で公式ページ(netflix.com)へ直接アクセスできず未確認。
+    // 外部の比較サイト複数で「Netflixは2019年以降、無料トライアルを実施していない」との情報あり。要人力確認・削除検討。
     id: 3001, service: "Netflix", icon: "🎬", category: "動画",
     title: "初回1か月無料", detail: "スタンダードプランの新規登録が対象",
     url: "https://www.netflix.com/jp/",
@@ -65,6 +67,8 @@ window.CAMPAIGNS = [
     tags: ["tanshin"],
   },
   {
+    // 2026-08-29 定期巡回：本セッションのネットワーク制限で公式ページ(dazn.com)へ直接アクセスできず未確認。
+    // 外部の比較サイトで「DAZNは現在無料体験期間を設けていない」との情報あり。要人力確認・削除検討。
     id: 3003, service: "DAZN", icon: "⚽", category: "動画",
     title: "1週間の無料トライアル", detail: "対象プランの新規契約が対象",
     url: "https://www.dazn.com/ja-JP/",
