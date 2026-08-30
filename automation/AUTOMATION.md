@@ -9,7 +9,7 @@
 |---|---|
 | `.github/workflows/campaign-check.yml` | 毎月1日・15日 09:00(JST) に自動実行。手動実行も可 |
 | `automation/check_sources.py` | ページ取得 → 前回との差分検出 → `LAST_REPORT.md` 生成（Python標準ライブラリのみ） |
-| `automation/sources.json` | 巡回対象。`sources`＝公式ページ、`aggregators`＝まとめ記事 |
+| `automation/sources.json` | 巡回対象。`sources`＝公式ページ、`aggregators`＝まとめ記事、`discovery`＝新サービスの発表が集まる場所（PR TIMES のキーワード別一覧など） |
 | `automation/snapshots/` | 各ページの前回内容。スクリプトが自動生成・更新。手で触らない |
 | `automation/LAST_REPORT.md` | 最新の巡回結果 |
 
@@ -29,9 +29,15 @@
 
 `LAST_REPORT.md`（PR本文にも入る）を見る：
 
+- **🆕 新サービス・新キャンペーンの候補** … `discovery` で新しく現れた見出し。見逃さんに合いそうなもの
+  （無料トライアル／初回割引があって、締切があって、全国の一般サービス）を `CANDIDATES.md` に転記 →
+  公式で確認 → `campaigns.js` へ。合わないもの（BtoB・情報商材・地域限定など）は無視。
 - **🔺 変化あり** … そのページを公式で開いて条件を再確認 → 必要なら `campaigns.js` を修正
 - **❌ ページが消えた/移動** … キャンペーン終了の可能性。該当エントリを削除 or `check-only` に
 - **⚠️ 取得できず** … 一時的な可能性。次回も続くようなら要確認（この項目だけでは PR は出ない）
+
+> 「発見」の見出しには PR TIMES の性質上ノイズ（BtoB SaaS の課金基盤、セミナー告知など）が混じります。
+> 人が「これは見逃さんに載せる価値がある一般消費者向けか？」で選別する前提です。
 
 確認が済んだら PR を Merge（スナップショットが更新され、次回はそこからの差分になる）。
 `campaigns.js` の修正は、同じ PR に足しても、別途手で直しても、どちらでもよい。

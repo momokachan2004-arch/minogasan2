@@ -2,19 +2,20 @@
 """
 見逃さん キャンペーン巡回チェック（Lite）
 ----------------------------------------
-automation/sources.json の各ページを取得し、前回の内容（automation/snapshots/）と比べて
-変化のあったページを automation/LAST_REPORT.md にまとめる。GitHub Actions から実行され、
-変化があれば Pull Request が作られる。中身の判断（campaigns.js をどう直すか）は人がやる。
+automation/sources.json の各ページを取得し、前回（automation/snapshots/）と比べて
+- sources / aggregators : 内容が変わったページ
+- discovery             : 新しく現れた見出し（＝新サービス・新キャンペーンの候補）
+を automation/LAST_REPORT.md にまとめる。GitHub Actions が実行し、何かあれば PR を作る。
+中身の判断（campaigns.js をどう直すか）は人がやる。
 
-- 依存ライブラリなし（Python 標準ライブラリのみ）
-- ページが JavaScript で描画されるタイプ（本文が空）だと差分は出にくい。
-  まとめ記事のページ（sources.json の "aggregators"）はサーバー側で本文を返すので効きやすい。
+依存ライブラリなし（Python 標準ライブラリのみ）。
 """
 
 import json
 import os
 import re
 import sys
+import html as htmllib
 import difflib
 import pathlib
 import datetime
@@ -29,7 +30,7 @@ REPORT_FILE = ROOT / "automation" / "LAST_REPORT.md"
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0 Safari/537.36")
 TIMEOUT = 20
-MAX_TEXT = 9000  # 比較に使う本文の最大文字数
+MAX_TEXT = 9000
 
 SNAP_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -38,75 +39,123 @@ def slugify(url: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", url.lower()).strip("-")[:90] or "x"
 
 
-def extract_text(html: str) -> str:
-    # スクリプト・スタイル等を除去
-    html = re.sub(r"(?is)<(script|style|noscript|template|svg)\b[^>]*>.*?</\1>", " ", html)
-    html = re.sub(r"(?is)<!--.*?-->", " ", html)
-    # 本文っぽい部分だけを対象にしてノイズ（ヘッダ・フッタ・広告）を減らす
-    m = re.search(r"(?is)<(main|article)\b[^>]*>(.*?)</\1>", html)
-    body = m.group(2) if m else html
-    text = re.sub(r"(?s)<[^>]+>", " ", body)
-    text = (text.replace("&nbsp;", " ").replace("&amp;", "&")
-                .replace("&lt;", "<").replace("&gt;", ">").replace("&#39;", "'"))
-    text = re.sub(r"\s+", " ", text).strip()
-    return text[:MAX_TEXT]
-
-
-def fetch(url: str) -> str:
+def get_html(url: str) -> str:
     req = urllib.request.Request(
         url, headers={"User-Agent": UA, "Accept-Language": "ja,en;q=0.8"})
     with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
         raw = r.read()
         enc = r.headers.get_content_charset() or "utf-8"
-    return extract_text(raw.decode(enc, errors="replace"))
+    return raw.decode(enc, errors="replace")
 
 
-def load_targets():
+def strip_noise(html: str) -> str:
+    html = re.sub(r"(?is)<(script|style|noscript|template|svg)\b[^>]*>.*?</\1>", " ", html)
+    html = re.sub(r"(?is)<!--.*?-->", " ", html)
+    return html
+
+
+def to_text(html: str) -> str:
+    """ページ全体を1つの文字列に（sources / aggregators の差分比較用）。"""
+    html = strip_noise(html)
+    m = re.search(r"(?is)<(main|article)\b[^>]*>(.*?)</\1>", html)
+    body = m.group(2) if m else html
+    text = re.sub(r"(?s)<[^>]+>", " ", body)
+    text = htmllib.unescape(text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text[:MAX_TEXT]
+
+
+def to_headlines(html: str) -> list:
+    """見出しっぽいテキストの一覧（discovery の新着検出用）。"""
+    html = strip_noise(html)
+    parts = re.split(r"(?is)</(?:h[1-6]|a|li|title|figcaption)>", html)
+    seen, out = set(), []
+    for p in parts:
+        t = re.sub(r"(?s)<[^>]+>", " ", p)
+        t = htmllib.unescape(t)
+        t = re.sub(r"\s+", " ", t).strip()
+        if 12 <= len(t) <= 140 and t not in seen:
+            seen.add(t)
+            out.append(t)
+    return out
+
+
+def load(kind: str):
     data = json.loads(SRC_FILE.read_text(encoding="utf-8"))
-    targets = []
-    for s in data.get("sources", []):
+    items = []
+    for s in data.get(kind, []):
         if s.get("url"):
-            targets.append((s.get("service", "?"), s["url"]))
-    for s in data.get("aggregators", []):
-        if s.get("url"):
-            targets.append((s.get("name", "まとめ記事"), s["url"]))
-    return targets
+            items.append((s.get("service") or s.get("name") or "?", s["url"]))
+    return items
 
 
 def main() -> int:
-    changed, gone, soft_fail, created = [], [], [], []
+    changed, gone, soft_fail, created, discoveries = [], [], [], [], []
 
-    for name, url in load_targets():
+    # ---- sources / aggregators : ページ内容の差分 ----
+    for name, url in load("sources") + load("aggregators"):
         snap = SNAP_DIR / (slugify(url) + ".txt")
         try:
-            new = fetch(url)
+            html = get_html(url)
         except urllib.error.HTTPError as e:
-            if e.code in (404, 410):
-                gone.append((name, url, f"HTTP {e.code}"))
-            else:
-                soft_fail.append((name, url, f"HTTP {e.code}"))
+            (gone if e.code in (404, 410) else soft_fail).append((name, url, f"HTTP {e.code}"))
             continue
         except Exception as e:  # noqa: BLE001
             soft_fail.append((name, url, str(e)[:120]))
             continue
 
+        new = to_text(html)
         if not snap.exists():
             snap.write_text(new, encoding="utf-8")
             created.append((name, url))
             continue
-
         old = snap.read_text(encoding="utf-8")
         if old == new:
             continue
-
         diff = "\n".join(difflib.unified_diff(
             old.split(". "), new.split(". "),
             fromfile="前回", tofile="今回", lineterm="", n=1))
         changed.append((name, url, diff[:1800]))
         snap.write_text(new, encoding="utf-8")
 
+    # ---- discovery : 新しく現れた見出し ----
+    for name, url in load("discovery"):
+        snap = SNAP_DIR / ("discovery-" + slugify(url) + ".txt")
+        try:
+            html = get_html(url)
+        except urllib.error.HTTPError as e:
+            (gone if e.code in (404, 410) else soft_fail).append((name, url, f"HTTP {e.code}"))
+            continue
+        except Exception as e:  # noqa: BLE001
+            soft_fail.append((name, url, str(e)[:120]))
+            continue
+
+        heads = to_headlines(html)
+        if not snap.exists():
+            snap.write_text("\n".join(heads), encoding="utf-8")
+            created.append((name + "（発見）", url))
+            continue
+        old = set(snap.read_text(encoding="utf-8").splitlines())
+        fresh = [h for h in heads if h not in old]
+        if fresh:
+            discoveries.append((name, url, fresh[:20]))
+        snap.write_text("\n".join(heads), encoding="utf-8")
+
+    # ---- レポート ----
     today = datetime.date.today().isoformat()
     out = [f"# キャンペーン巡回レポート {today}", ""]
+
+    if discoveries:
+        total = sum(len(f) for _, _, f in discoveries)
+        out.append(f"## 🆕 新サービス・新キャンペーンの候補（{total}件）— 見逃さんに合うものを CANDIDATES.md へ")
+        out.append("")
+        for name, url, fresh in discoveries:
+            out.append(f"### {name}")
+            out.append(url)
+            out.append("")
+            for h in fresh:
+                out.append(f"- {h}")
+            out.append("")
 
     if changed:
         out.append(f"## 🔺 変化あり（{len(changed)}件）— 公式で条件を再確認してください")
@@ -122,30 +171,29 @@ def main() -> int:
         out.append("")
 
     if soft_fail:
-        out.append(f"## ⚠️ 取得できず（{len(soft_fail)}件）— 一時的な可能性。次回も続くなら要確認")
+        out.append(f"## ⚠️ 取得できず（{len(soft_fail)}件）— 一時的な可能性。続くようなら要確認")
         out.append("")
         for name, url, why in soft_fail:
             out.append(f"- {name} — {url} （{why}）")
         out.append("")
 
     if created:
-        out.append(f"## 🆕 初回スナップショットを作成（{len(created)}件）")
+        out.append(f"## 📸 初回スナップショットを作成（{len(created)}件）")
         out.append("")
         for name, url in created:
             out.append(f"- {name} — {url}")
         out.append("")
 
-    if not (changed or gone or created):
+    if not (discoveries or changed or gone or created):
         out.append("変化なし。")
 
     report = "\n".join(out)
     REPORT_FILE.write_text(report + "\n", encoding="utf-8")
     print(report)
 
-    # PR を作るのは「変化あり / ページ消失 / 初回作成」があったときだけ。
-    # soft_fail だけのときは毎回 PR を作らない（ノイズになるため）。
-    has_changes = bool(changed or gone or created)
-    summary = f"{len(changed)} changed, {len(gone)} gone, {len(soft_fail)} failed, {len(created)} new"
+    has_changes = bool(discoveries or changed or gone or created)
+    summary = (f"{len(discoveries)} discover, {len(changed)} changed, "
+               f"{len(gone)} gone, {len(soft_fail)} failed, {len(created)} new")
     gh_out = os.environ.get("GITHUB_OUTPUT")
     if gh_out:
         with open(gh_out, "a", encoding="utf-8") as f:
