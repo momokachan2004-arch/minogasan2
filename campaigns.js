@@ -56,6 +56,17 @@ window.SITUATION_TAGS = [
 window.CAMPAIGNS = [
   /* ============ 確認済み（2026-08-29 公式サイトで条件を確認）============ */
   {
+    // 2026-08-30 運営が公式で確認：初月100円キャンペーン、受付 7/21〜9/2。
+    // 「初月100円」= 安い期間の長さを 30日 とみなし、利用開始日を記録すると
+    // 通常料金(976円)になる30日前にリマインド。過去に加入歴のある人は対象外。
+    id: 3160, service: "FOD", icon: "📺", category: "動画",
+    title: "初月100円キャンペーン", detail: "初回登録・過去に未加入の人が対象。翌月以降は月額976円",
+    url: "https://fod.fujitv.co.jp/",
+    deadline: "2026-09-02", freeDays: 30, hasCancellation: true, addedAt: "2026-08-30",
+    tags: ["tanshin"],
+    lastChecked: "2026-08-30", source: "運営確認",
+  },
+  {
     // Premium Standard は「これまでPremium未利用」の人が対象。3か月無料、その後は月額1,080円。
     // キャンペーン終了日 2026-09-23。
     id: 3006, service: "Spotify", icon: "🎶", category: "音楽",

@@ -18,7 +18,8 @@
 | TSUTAYA DISCAS | 30日 | 🟡 |
 | Amazon プライム・ビデオ | 30日（プライムに含む） | ✅（Amazonプライムとして） |
 | Netflix | ❌ トライアル無し（2019〜） | 除外 |
-| Disney+ / FOD / ABEMA / Hulu / TELASA / WOWOW | ❌ 常設の無料トライアル無し | 保留（期間限定offerが出たら都度） |
+| FOD | ❌ 常設の無料トライアル無し。ただし期間限定offerが不定期（2026-08-30: 初月100円 受付7/21〜9/2 を運営確認 → id 3160 で掲載） | 巡回対象に追加済み |
+| Disney+ / ABEMA / Hulu / TELASA / WOWOW | ❌ 常設の無料トライアル無し | 保留（期間限定offerが出たら都度） |
 
 ## 音楽
 
