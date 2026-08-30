@@ -8,6 +8,7 @@
 見逃さん/
 ├─ index.html              ← アプリ本体（これを開く）
 ├─ campaigns.js             ← 掲載キャンペーンのデータ（ここだけ編集すればOK）
+├─ campaigns編集ガイド.md    ← campaigns.js の追加・修正・削除・反映の手順
 ├─ manifest.webmanifest     ← PWA（スマホのホーム画面アプリ）用の定義
 ├─ sw.js                    ← Service Worker（オフライン用キャッシュ）
 ├─ icon-192.png / icon-512.png / icon-maskable-512.png  ← アプリアイコン
