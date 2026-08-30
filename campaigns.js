@@ -283,6 +283,17 @@ window.CAMPAIGNS = [
 
   /* ============ 運営確認（運営者が公式ページで内容を確認したもの）============ */
   {
+    // 2026-08-30 PR TIMES『ワンコイン』のスナップショットから発見 → 運営が内容確認。
+    // チョコクロ＋対象ドリンクのセットが期間中 終日500円（税込）。8/18〜9/4。
+    // 一部店舗（関西国際空港店／ユニバーサル・シティウォーク店／茅ケ崎駅前店）は対象外。
+    // ※ url は公式サイトのトップ。キャンペーン専用ページが分かれば差し替える。
+    id: 3170, service: "サンマルクカフェ", icon: "🥐", category: "フード",
+    title: "チョコクロ＋ドリンク ワンコイン（500円）", detail: "対象ドリンクとのセットが期間中 終日500円（税込）。一部店舗は対象外",
+    url: "https://www.saint-marc.jp/",
+    deadline: "2026-09-04", freeDays: null, hasCancellation: false, addedAt: "2026-08-30",
+    lastChecked: "2026-08-30", source: "運営確認",
+  },
+  {
     id: 3113, service: "Amazon Music Unlimited", icon: "🎵", category: "音楽",
     title: "新規登録で30日間無料", detail: "常時実施。再登録者向けに「3か月 月額300円」キャンペーンをやっていることも",
     url: "https://www.amazon.co.jp/music/unlimited",
