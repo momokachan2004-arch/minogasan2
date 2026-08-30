@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<title>見逃さん アイコン生成</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet" />
+<style>
+  body { font-family: system-ui, sans-serif; background:#20302b; color:#eee; margin:0; padding:28px; }
+  h1 { font-size:16px; font-weight:700; margin:0 0 4px; }
+  p { font-size:13px; color:#bcd; margin:4px 0 20px; }
+  .row { display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
+  .item { text-align:center; }
+  .item canvas { background:#0000; border-radius:12px; display:block; }
+  .item .cap { font-size:11px; color:#9ab; margin-top:8px; }
+  button { margin-top:6px; font:inherit; font-size:12px; padding:7px 12px; border-radius:8px;
+    border:1px solid #4a6; background:#1c3a30; color:#dfe; cursor:pointer; }
+  .grid { display:flex; gap:10px; align-items:center; }
+</style>
+</head>
+<body>
+<h1>見逃さん アイコン生成</h1>
+<p>下のプレビューを確認し、各「ダウンロード」を押して <code>icon-192.png</code> / <code>icon-512.png</code> / <code>icon-maskable-512.png</code> を保存 → 「見逃さん」フォルダの同名ファイルに上書き。</p>
+
+<div class="row" id="previews"></div>
+
+<script>
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function draw(ctx, S, maskable) {
+  ctx.clearRect(0, 0, S, S);
+
+  // --- 背景：温かいクリーム（縦のごく薄いグラデ） ---
+  const bg = ctx.createLinearGradient(0, 0, 0, S);
+  bg.addColorStop(0, "#F8F3E7");
+  bg.addColorStop(1, "#EBE3CE");
+  ctx.save();
+  if (!maskable) { roundRect(ctx, 0, 0, S, S, S * 0.225); ctx.clip(); }
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, S, S);
+
+  // --- チケットの寸法 ---
+  const pad = maskable ? S * 0.17 : S * 0.085;
+  const tw = S - pad * 2;
+  const th = tw * 0.66;
+  const tx = (S - tw) / 2;
+  const ty = (S - th) / 2 + S * 0.006;
+  const rr = th * 0.24;
+  const stub = tw * 0.30;
+  const rot = maskable ? -0.03 : -0.058;
+  const notchFill = "#EEE6D1";
+
+  ctx.translate(S / 2, S / 2); ctx.rotate(rot); ctx.translate(-S / 2, -S / 2);
+
+  // 影
+  ctx.save();
+  ctx.shadowColor = "rgba(20,52,42,0.30)";
+  ctx.shadowBlur = S * 0.055;
+  ctx.shadowOffsetY = S * 0.022;
+  roundRect(ctx, tx, ty, tw, th, rr);
+  ctx.fillStyle = "#14463A";
+  ctx.fill();
+  ctx.restore();
+
+  // チケット本体（緑グラデ）＋ 左側の半券（ミント）
+  ctx.save();
+  roundRect(ctx, tx, ty, tw, th, rr);
+  ctx.clip();
+  const tg = ctx.createLinearGradient(0, ty, 0, ty + th);
+  tg.addColorStop(0, "#237C5C");
+  tg.addColorStop(1, "#154C3C");
+  ctx.fillStyle = tg;
+  ctx.fillRect(tx, ty, tw, th);
+  const mg = ctx.createLinearGradient(0, ty, 0, ty + th);
+  mg.addColorStop(0, "#A2ECD4");
+  mg.addColorStop(1, "#82DBC0");
+  ctx.fillStyle = mg;
+  ctx.fillRect(tx, ty, stub, th);
+  // 上端のごく薄いハイライト
+  ctx.fillStyle = "rgba(255,255,255,0.14)";
+  ctx.fillRect(tx, ty, tw, Math.max(2, th * 0.05));
+  ctx.restore();
+
+  // 切り込み（半券の境界、上下にクリーム色の円）
+  const px = tx + stub;
+  const nr = th * 0.115;
+  ctx.fillStyle = notchFill;
+  ctx.beginPath(); ctx.arc(px, ty, nr, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(px, ty + th, nr, 0, Math.PI * 2); ctx.fill();
+
+  // 破線のミシン目
+  ctx.strokeStyle = "rgba(255,255,255,0.6)";
+  ctx.lineWidth = Math.max(2, S * 0.0055);
+  ctx.setLineDash([S * 0.017, S * 0.013]);
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(px, ty + nr * 0.8);
+  ctx.lineTo(px, ty + th - nr * 0.8);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 見（緑の本体側に）
+  const cx = tx + stub + (tw - stub) / 2 - tw * 0.015;
+  const cy = ty + th / 2;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = '900 ' + (th * 0.86) + 'px "Zen Maru Gothic", sans-serif';
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.28)";
+  ctx.shadowBlur = S * 0.012;
+  ctx.shadowOffsetY = S * 0.006;
+  ctx.fillStyle = "#F5F0E2";
+  ctx.fillText("見", cx, cy + th * 0.015);
+  ctx.restore();
+
+  // 半券のミント側にチェックマーク（＝見逃さなかった）
+  ctx.strokeStyle = "#12463A";
+  ctx.lineWidth = Math.max(3, stub * 0.15);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  const chx = tx + stub / 2, chy = cy + th * 0.01, chs = stub * 0.26;
+  ctx.beginPath();
+  ctx.moveTo(chx - chs, chy + chs * 0.1);
+  ctx.lineTo(chx - chs * 0.25, chy + chs * 0.75);
+  ctx.lineTo(chx + chs, chy - chs * 0.7);
+  ctx.stroke();
+
+  ctx.restore(); // rotate
+  ctx.restore(); // clip
+}
+
+const SIZES = [
+  { size: 192, maskable: false, name: "icon-192.png" },
+  { size: 512, maskable: false, name: "icon-512.png" },
+  { size: 512, maskable: true,  name: "icon-maskable-512.png" },
+];
+
+async function build() {
+  try { await document.fonts.load('900 100px "Zen Maru Gothic"'); await document.fonts.ready; } catch (e) {}
+  const wrap = document.getElementById("previews");
+  wrap.innerHTML = "";
+  for (const s of SIZES) {
+    const cv = document.createElement("canvas");
+    cv.width = s.size; cv.height = s.size;
+    const disp = Math.min(s.size, 260);
+    cv.style.width = disp + "px"; cv.style.height = disp + "px";
+    draw(cv.getContext("2d"), s.size, s.maskable);
+
+    const box = document.createElement("div");
+    box.className = "item";
+    box.appendChild(cv);
+    const cap = document.createElement("div");
+    cap.className = "cap";
+    cap.textContent = s.name + (s.maskable ? "（Android用・余白多め）" : "");
+    box.appendChild(cap);
+    const btn = document.createElement("button");
+    btn.textContent = "ダウンロード";
+    btn.onclick = () => cv.toBlob((b) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(b);
+      a.download = s.name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }, "image/png");
+    box.appendChild(document.createElement("br"));
+    box.appendChild(btn);
+    wrap.appendChild(box);
+  }
+}
+build();
+</script>
+</body>
+</html>

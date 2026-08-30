@@ -2,7 +2,7 @@
    - 同じ場所にある HTML / campaigns.js は「ネットワーク優先」（最新を取りに行き、失敗したらキャッシュ）
    - React・フォントなどの外部ファイルは「キャッシュ優先」（初回オンライン後はオフラインでも動く）
    キャッシュを作り直したいときは下の CACHE の数字を上げてください。 */
-const CACHE = "minogasan-cache-v2";
+const CACHE = "minogasan-cache-v4";
 const CORE = [
   "./index.html",
   "./campaigns.js",
