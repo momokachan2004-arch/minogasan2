@@ -214,7 +214,7 @@ const STORAGE_KEY = "minogasan.v1";
 const CATEGORIES = window.CATEGORIES || ["すべて"];
 const CAMPAIGNS = (window.CAMPAIGNS || []).slice();
 const SITUATION_TAGS = window.SITUATION_TAGS || [];
-const CAT_EMOJI = { "動画":"🎬", "音楽":"🎵", "雑誌":"📖", "フード":"🍔", "買い物":"🛍️", "くらし":"🏠" };
+const CAT_EMOJI = { "動画":"🎬", "音楽":"🎵", "雑誌":"📖", "フード":"🍔", "買い物":"🛍️", "くらし":"🏠", "ゲーム":"🎮" };
 const tagLabel = (id) => { const t = SITUATION_TAGS.find(x => x.id === id); return t ? t.label : id; };
 const campaignMatchesTags = (c, ids) => Array.isArray(c.tags) && c.tags.some(t => ids.includes(t));
 
@@ -675,8 +675,8 @@ function CampaignCard({ c, s }) {
             <span className="tag-cat">{c.category}</span>
             {matched && <span className="tag-match">関心に合致</span>}
             {c.lastChecked && (
-              c.source === "公式"
-                ? <span className="tag-match" title={"公式サイトで確認: " + fmtMD(c.lastChecked)}>✓ {fmtMD(c.lastChecked)} 公式確認</span>
+              (c.source === "公式" || c.source === "運営確認")
+                ? <span className="tag-match" title={(c.source || "確認") + ": " + fmtMD(c.lastChecked)}>✓ {fmtMD(c.lastChecked)} {c.source === "運営確認" ? "確認" : "公式確認"}</span>
                 : <span className="tag-cat" title={"出どころ: " + (c.source || "不明") + "（要公式確認）"}>{fmtMD(c.lastChecked)} 調査</span>
             )}
           </div>

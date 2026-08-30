@@ -38,7 +38,7 @@
      詳細画面に「未確認（サンプルデータ）」と出ます。次回の更新で確認 or 差し替えます。
    ============================================================================= */
 
-window.CATEGORIES = ["すべて", "動画", "音楽", "雑誌", "買い物", "くらし"];
+window.CATEGORIES = ["すべて", "動画", "音楽", "雑誌", "フード", "買い物", "くらし", "ゲーム"];
 
 // 状況・関心タグ（初期ラインナップ）。id を campaign.tags で参照する。
 window.SITUATION_TAGS = [
@@ -107,6 +107,56 @@ window.CAMPAIGNS = [
     deadline: null, freeDays: 7, hasCancellation: true, addedAt: "2026-08-29",
     tags: ["kenko"],
     lastChecked: "2026-08-29", source: "公式",
+  },
+  {
+    // 2026-08-30 公式で確認：スタンダードは初回1か月無料（学生プランは90日）。締切なし＝通年。
+    // 以降 月額980円（楽天カード/モバイル対象プランは780円）。A8.net で提携済み。
+    id: 3005, service: "楽天ミュージック", icon: "🎧", category: "音楽",
+    title: "スタンダード 初回1か月無料", detail: "学生プランは90日無料。以降 月額980円（楽天カード/モバイル対象は780円）",
+    url: "https://music.rakuten.co.jp/",
+    deadline: null, freeDays: 30, hasCancellation: true, addedAt: "2026-08-30",
+    tags: ["tanshin"],
+    lastChecked: "2026-08-30", source: "公式",
+  },
+  {
+    // 2026-08-30 公式で確認：30日間無料体験。締切なし＝通年。以降 プレミアム月額1,500円。
+    // 現在は2〜3か月無料の増量キャンペーンの記載なし。A8.net で提携済み。
+    id: 3110, service: "Audible", icon: "🎧", category: "雑誌",
+    title: "30日間の無料体験", detail: "本をプロの朗読で聴けるサービス。以降 プレミアム月額1,500円",
+    url: "https://www.audible.co.jp/",
+    deadline: null, freeDays: 30, hasCancellation: true, addedAt: "2026-08-30",
+    tags: ["tanshin", "shukatsu"],
+    lastChecked: "2026-08-30", source: "公式",
+  },
+  {
+    // 2026-08-30 公式で確認：聴き放題プラン「14日間無料体験」。初めて聴き放題に登録する人が対象。
+    // 締切なし＝通年。以降 年割833円/月・月額1,330円。
+    id: 3111, service: "audiobook.jp", icon: "🎧", category: "雑誌",
+    title: "聴き放題 14日間の無料体験", detail: "初めて聴き放題プランに登録する人が対象。以降 833円/月（年割）〜",
+    url: "https://audiobook.jp/",
+    deadline: null, freeDays: 14, hasCancellation: true, addedAt: "2026-08-30",
+    tags: ["tanshin", "shukatsu"],
+    lastChecked: "2026-08-30", source: "公式",
+  },
+  {
+    // 2026-08-30 公式で確認：全コース「初回1週間無料」。締切なし＝通年。
+    // 以降 新日常英会話2,178円/月、TOEIC・ビジネス英語3,278円/月。
+    id: 3120, service: "スタディサプリ ENGLISH", icon: "🗣️", category: "くらし",
+    title: "初回1週間の無料体験", detail: "新日常英会話・TOEIC対策・ビジネス英語 全コース対象",
+    url: "https://eigosapuri.jp/",
+    deadline: null, freeDays: 7, hasCancellation: true, addedAt: "2026-08-30",
+    tags: ["shukatsu"],
+    lastChecked: "2026-08-30", source: "公式",
+  },
+  {
+    // 2026-08-30 公式で確認：初回注文が3回に分けて合計3,000円OFF（1,500+1,000+500）。
+    // 締切なし＝通年。冷凍弁当の都度購入なので解約の概念は薄い＝hasCancellation:false。
+    id: 3130, service: "nosh（ナッシュ）", icon: "🍱", category: "フード",
+    title: "初回 合計3,000円OFF", detail: "初回注文から3回に分けて割引（1,500円＋1,000円＋500円）",
+    url: "https://nosh.jp/",
+    deadline: null, freeDays: null, hasCancellation: false, addedAt: "2026-08-30",
+    tags: ["tanshin", "kenko"],
+    lastChecked: "2026-08-30", source: "公式",
   },
 
   /* ============ 未確認（実在サービスだが、この環境から公式ページを開けず未確認）============ */
@@ -200,5 +250,87 @@ window.CAMPAIGNS = [
     deadline: null, freeDays: 7, hasCancellation: true, addedAt: "2026-08-29",
     tags: ["shukatsu"],
     lastChecked: "2026-08-29", source: "まとめ記事・要公式確認",
+  },
+  {
+    id: 3112, service: "BOOK☆WALKER 読み放題", icon: "📓", category: "雑誌",
+    title: "初回14日間の無料お試し", detail: "マンガコース／MAXコース。ラノベ・マンガに強い",
+    url: "https://bookwalker.jp/select/yomihodai/",
+    deadline: null, freeDays: 14, hasCancellation: true, addedAt: "2026-08-30",
+    tags: ["tanshin"],
+    lastChecked: "2026-08-30", source: "まとめ記事・要公式確認",
+  },
+  {
+    id: 3140, service: "Oisix", icon: "🥗", category: "フード",
+    title: "初回限定 おためしセットが大幅割引", detail: "1回だけのお試し。定期加入の縛りなし",
+    url: "https://www.oisix.com/",
+    deadline: null, freeDays: null, hasCancellation: false, addedAt: "2026-08-30",
+    tags: ["tanshin", "kosodate"],
+    lastChecked: "2026-08-30", source: "まとめ記事・要公式確認",
+  },
+
+  /* ============ 運営確認（運営者が公式ページで内容を確認したもの）============ */
+  {
+    id: 3113, service: "Amazon Music Unlimited", icon: "🎵", category: "音楽",
+    title: "新規登録で30日間無料", detail: "常時実施。再登録者向けに「3か月 月額300円」キャンペーンをやっていることも",
+    url: "https://www.amazon.co.jp/music/unlimited",
+    deadline: null, freeDays: 30, hasCancellation: true, addedAt: "2026-08-30",
+    tags: ["tanshin"],
+    lastChecked: "2026-08-30", source: "運営確認",
+  },
+  {
+    id: 3121, service: "Duolingo", icon: "🦉", category: "くらし",
+    title: "Super Duolingo 14日間の無料体験", detail: "広告なし・回数制限なしで学べる有料版のお試し",
+    url: "https://ja.duolingo.com/",
+    deadline: null, freeDays: 14, hasCancellation: true, addedAt: "2026-08-30",
+    tags: ["shukatsu"],
+    lastChecked: "2026-08-30", source: "運営確認",
+  },
+  {
+    id: 3122, service: "LEAN BODY", icon: "🧘", category: "くらし",
+    title: "2週間の無料体験", detail: "自宅向けオンラインフィットネス。12か月プラン登録で月額980円（通常1,980円）になる特典あり",
+    url: "https://lean-body.jp/",
+    deadline: null, freeDays: 14, hasCancellation: true, addedAt: "2026-08-30",
+    tags: ["kenko", "tanshin"],
+    lastChecked: "2026-08-30", source: "運営確認",
+  },
+  {
+    id: 3150, service: "Nintendo Switch Online", icon: "🎮", category: "ゲーム",
+    title: "7日間の無料体験", detail: "オンラインプレイやファミコン・スーファミが遊べる。初回のみ",
+    url: "https://www.nintendo.com/jp/switch-online/",
+    deadline: null, freeDays: 7, hasCancellation: true, addedAt: "2026-08-30",
+    tags: ["tanshin"],
+    lastChecked: "2026-08-30", source: "運営確認",
+  },
+  {
+    id: 3131, service: "ヨシケイ", icon: "🥘", category: "フード",
+    title: "初めての人向け ミールキットお試し5days", detail: "月〜金の5日間セット。1食あたり約300円〜",
+    url: "https://yoshikei-dvlp.co.jp/otameshi/",
+    deadline: null, freeDays: null, hasCancellation: false, addedAt: "2026-08-30",
+    tags: ["tanshin", "kosodate"],
+    lastChecked: "2026-08-30", source: "運営確認",
+  },
+  {
+    id: 3132, service: "わんまいる", icon: "🍲", category: "フード",
+    title: "初回注文 500円オフ", detail: "国産食材の冷凍おかず宅配。定期の初回が割引",
+    url: "https://www.wanmile.jp/",
+    deadline: null, freeDays: null, hasCancellation: false, addedAt: "2026-08-30",
+    tags: ["tanshin", "kenko"],
+    lastChecked: "2026-08-30", source: "運営確認",
+  },
+  {
+    id: 3133, service: "三ツ星ファーム", icon: "🍱", category: "フード",
+    title: "初回注文 4,500円オフ ＋ 送料無料", detail: "一流シェフ監修の冷凍宅配弁当。初回限定",
+    url: "https://mitsuboshifarm.jp/",
+    deadline: null, freeDays: null, hasCancellation: false, addedAt: "2026-08-30",
+    tags: ["tanshin", "kenko"],
+    lastChecked: "2026-08-30", source: "運営確認",
+  },
+  {
+    id: 3134, service: "コープ（生協の宅配）", icon: "🛒", category: "フード",
+    title: "資料請求で人気商品プレゼント／web初回登録で3,000円オフ", detail: "地域の生協により内容が異なる場合あり",
+    url: "https://www.co-opdeli.jp/",
+    deadline: null, freeDays: null, hasCancellation: false, addedAt: "2026-08-30",
+    tags: ["kosodate", "senior"],
+    lastChecked: "2026-08-30", source: "運営確認",
   },
 ];

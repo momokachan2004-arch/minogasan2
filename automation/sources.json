@@ -1,23 +1,57 @@
 {
-  "_comment": "定期更新の巡回リスト。ここに『終了日の告知が出にくい＝比較的安定した公式トライアル』を並べる。金融・通信の『〜◯/◯まで』の期限モノは自動確認が難しいので、原則ここには入れず手動運用にする。id は campaigns.js の該当エントリと対応（新規は null）。",
-  "lastReviewed": "2026-08-29",
+  "_comment": "巡回対象。sources = 各サービスの公式ページ（JS描画だと差分が出にくい）。aggregators = 編集者が更新しているまとめ記事（サーバー側で本文を返すので差分チェックが効きやすい）。check_sources.py が両方を巡回し、前回との差分を LAST_REPORT.md に出す。id は campaigns.js の該当エントリ（新規・未掲載は null）。",
+  "lastReviewed": "2026-08-30",
+
+  "aggregators": [
+    { "name": "音楽サブスク 無料トライアル比較（appllio）",   "url": "https://appllio.com/music-streaming-subscription-free-trial" },
+    { "name": "VOD 比較（app-liv）",                          "url": "https://vod.app-liv.jp/archive/83805/" },
+    { "name": "電子書籍・マンガ読み放題 比較（oricon）",       "url": "https://life.oricon.co.jp/rank-manga-apps/special/comparison/subscription/" },
+    { "name": "宅配食 お試し比較（app-liv）",                  "url": "https://meal.app-liv.jp/archive/137067/" },
+    { "name": "食材宅配 お試しセット キャンペーン一覧",         "url": "https://takushoku-repo.com/campaign/" },
+    { "name": "Kindle Unlimited キャンペーン（appllio）",      "url": "https://appllio.com/kindle-unlimited-campaign-information" },
+    { "name": "Amazon Music Unlimited キャンペーン（appllio）", "url": "https://appllio.com/amazon-music-unlimited-campaign-guide" }
+  ],
+
   "sources": [
-    { "id": null, "service": "Netflix",              "category": "動画",  "url": "https://www.netflix.com/jp/",                                  "kind": "check-only", "notes": "2026-08-29 campaigns.js から削除済み（無料トライアル2019年以降なし）。復活したら再掲を検討するため巡回だけ残す。" },
-    { "id": 3014, "service": "U-NEXT",               "category": "動画",  "url": "https://video.unext.jp/",                                     "kind": "free-trial", "notes": "31日間無料。終了日の告知なし＝deadline:null。" },
-    { "id": null, "service": "Lemino",               "category": "動画",  "url": "https://lemino.docomo.ne.jp/",                                "kind": "free-trial", "notes": "初回31日間無料（ドコモ）。" },
-    { "id": null, "service": "dアニメストア",          "category": "動画",  "url": "https://animestore.docomo.ne.jp/",                            "kind": "free-trial", "notes": "初回31日間無料。" },
-    { "id": null, "service": "Hulu",                 "category": "動画",  "url": "https://www.hulu.jp/",                                        "kind": "free-trial", "notes": "無料トライアルの有無が変動。" },
-    { "id": null, "service": "ABEMAプレミアム",        "category": "動画",  "url": "https://abema.tv/",                                           "kind": "free-trial", "notes": "無料期間が変動しやすい。" },
-    { "id": null, "service": "DAZN",                 "category": "動画",  "url": "https://www.dazn.com/ja-JP/",                                 "kind": "check-only", "notes": "2026-08-29 campaigns.js から削除済み（無料トライアル2022年終了、現在は有料割引のみ）。復活したら再掲を検討。" },
-    { "id": 3006, "service": "Spotify",              "category": "音楽",  "url": "https://www.spotify.com/jp/premium/",                         "kind": "free-trial", "notes": "Premium Standard 3か月無料（新規未利用者）。終了日あり＝要確認。" },
-    { "id": null, "service": "YouTube Premium",       "category": "音楽",  "url": "https://www.youtube.com/premium",                             "kind": "free-trial", "notes": "1か月無料（新規）。ページがJS描画で読めない場合は手動。" },
-    { "id": null, "service": "Apple Music",           "category": "音楽",  "url": "https://music.apple.com/jp/",                                 "kind": "free-trial", "notes": "1か月無料（新規）。端末購入特典で延長の場合あり。" },
-    { "id": 3004, "service": "Amazon Music Unlimited", "category": "音楽",  "url": "https://www.amazon.co.jp/music/unlimited",                    "kind": "trial-or-discount", "notes": "『3か月無料』『3か月100円』など内容が入れ替わる。" },
-    { "id": 3008, "service": "Kindle Unlimited",      "category": "雑誌",  "url": "https://www.amazon.co.jp/kindle-dbs/hz/subscribe/ku",          "kind": "trial-or-discount", "notes": "通常30日間無料。『2か月無料』などの増量キャンペーンが不定期。" },
-    { "id": 3009, "service": "dマガジン",             "category": "雑誌",  "url": "https://magazine.dmkt-sp.jp/",                                "kind": "free-trial", "notes": "初回31日間無料。" },
-    { "id": null, "service": "楽天マガジン",           "category": "雑誌",  "url": "https://magazine.rakuten.co.jp/",                             "kind": "free-trial", "notes": "初回31日間無料。" },
-    { "id": 3007, "service": "タブホ",               "category": "雑誌",  "url": "https://tabuho.jp/",                                          "kind": "free-trial", "notes": "初月無料。" },
-    { "id": 3012, "service": "Amazon プライム",        "category": "買い物", "url": "https://www.amazon.co.jp/amazonprime",                        "kind": "free-trial", "notes": "30日間無料体験。学生は6か月。" },
-    { "id": 3010, "service": "Uber One",             "category": "フード", "url": "https://www.ubereats.com/jp",                                 "kind": "free-trial", "notes": "1か月無料トライアル。" }
+    { "id": 3014, "service": "U-NEXT",               "url": "https://video.unext.jp/" },
+    { "id": 3101, "service": "Lemino",               "url": "https://lemino.docomo.ne.jp/" },
+    { "id": 3102, "service": "dアニメストア",          "url": "https://animestore.docomo.ne.jp/" },
+    { "id": 3103, "service": "DMM TV",               "url": "https://tv.dmm.com/vod/" },
+    { "id": 3104, "service": "TSUTAYA DISCAS",        "url": "https://www.discas.net/" },
+    { "id": null, "service": "Netflix",              "url": "https://www.netflix.com/jp/",  "note": "check-only（無料トライアル無し。復活監視）" },
+    { "id": null, "service": "Hulu",                 "url": "https://www.hulu.jp/",         "note": "check-only（トライアル有無が変動）" },
+    { "id": null, "service": "ABEMAプレミアム",        "url": "https://abema.tv/",            "note": "check-only" },
+    { "id": null, "service": "DAZN",                 "url": "https://www.dazn.com/ja-JP/",  "note": "check-only（無料トライアル無し。復活監視）" },
+
+    { "id": 3006, "service": "Spotify",              "url": "https://www.spotify.com/jp/premium/" },
+    { "id": 3005, "service": "楽天ミュージック",       "url": "https://music.rakuten.co.jp/" },
+    { "id": 3105, "service": "Apple Music",           "url": "https://music.apple.com/jp/" },
+    { "id": 3106, "service": "YouTube Premium",       "url": "https://www.youtube.com/premium" },
+    { "id": 3107, "service": "LINE MUSIC",            "url": "https://music.line.me/" },
+    { "id": 3113, "service": "Amazon Music Unlimited", "url": "https://www.amazon.co.jp/music/unlimited" },
+
+    { "id": 3009, "service": "dマガジン",             "url": "https://dmagazine.docomo.ne.jp/" },
+    { "id": 3043, "service": "楽天マガジン",           "url": "https://magazine.rakuten.co.jp/" },
+    { "id": 3041, "service": "日経電子版",             "url": "https://www.nikkei.com/promotion/" },
+    { "id": 3008, "service": "Kindle Unlimited",      "url": "https://www.amazon.co.jp/kindle-dbs/hz/subscribe/ku" },
+    { "id": 3108, "service": "ブック放題",             "url": "https://www.bookhodai.jp/" },
+    { "id": 3109, "service": "コミックシーモア 読み放題", "url": "https://www.cmoa.jp/lp/yomihoudai/" },
+    { "id": 3112, "service": "BOOK☆WALKER 読み放題",   "url": "https://bookwalker.jp/select/yomihodai/" },
+    { "id": 3110, "service": "Audible",              "url": "https://www.audible.co.jp/" },
+    { "id": 3111, "service": "audiobook.jp",          "url": "https://audiobook.jp/" },
+
+    { "id": 3130, "service": "nosh（ナッシュ）",        "url": "https://nosh.jp/" },
+    { "id": 3140, "service": "Oisix",                "url": "https://www.oisix.com/" },
+    { "id": 3131, "service": "ヨシケイ",              "url": "https://yoshikei-dvlp.co.jp/otameshi/" },
+    { "id": 3132, "service": "わんまいる",             "url": "https://www.wanmile.jp/" },
+    { "id": 3133, "service": "三ツ星ファーム",          "url": "https://mitsuboshifarm.jp/" },
+    { "id": 3134, "service": "コープデリ",             "url": "https://www.co-opdeli.jp/" },
+
+    { "id": 3012, "service": "Amazon プライム",        "url": "https://www.amazon.co.jp/amazonprime" },
+    { "id": 3080, "service": "あすけん",              "url": "https://www.asken.jp/" },
+    { "id": 3120, "service": "スタディサプリ ENGLISH",  "url": "https://eigosapuri.jp/" },
+    { "id": 3121, "service": "Duolingo",             "url": "https://ja.duolingo.com/" },
+    { "id": 3122, "service": "LEAN BODY",            "url": "https://lean-body.jp/" },
+    { "id": 3150, "service": "Nintendo Switch Online", "url": "https://www.nintendo.com/jp/switch-online/" }
   ]
 }
