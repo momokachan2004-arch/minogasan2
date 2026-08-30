@@ -120,22 +120,24 @@
   .foryou-tags { font-family:var(--fb); font-weight:400; font-size:11px; color:var(--dim); }
   .foryou-empty { margin:0 16px 12px; font-size:11.5px; color:var(--dim); }
   .list { padding:0 16px 20px; display:flex; flex-direction:column; gap:10px; }
-  .card { background:var(--card); border-radius:18px; display:flex; overflow:hidden; box-shadow:var(--shadow); }
-  .card-ic { width:58px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:23px; background:var(--surface-1); }
+  .card { background:var(--card); border-radius:16px 18px 18px 16px; display:flex; overflow:hidden; box-shadow:var(--shadow); }
+  .card-ic { width:56px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:23px;
+    background:var(--surface-2); }
   .perf { position:relative; width:0; }
-  .perf i { position:absolute; top:-1px; bottom:-1px; left:-1px; border-left:2px dashed var(--perf-line); }
-  .perf b { position:absolute; left:-9px; width:16px; height:16px; border-radius:50%; background:var(--notch); }
-  .perf b.t { top:-8px; } .perf b.b { bottom:-8px; }
+  .perf i { position:absolute; top:0; bottom:0; left:-1px; width:2px;
+    background-image:repeating-linear-gradient(to bottom, var(--perf-line) 0 5px, transparent 5px 11px); }
+  .perf b { position:absolute; left:-10px; width:18px; height:18px; border-radius:50%; background:var(--notch); }
+  .perf b.t { top:-9px; } .perf b.b { bottom:-9px; }
   .card-main { flex:1; padding:12px 14px; min-width:0; }
   .card-main-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
   .svc { font-size:11px; color:var(--muted); letter-spacing:.5px; }
   .ttl { font-family:var(--fd); font-weight:700; font-size:15px; margin-top:2px; line-height:1.3; color:var(--ink); }
   .dtl { font-size:12px; color:var(--dim); margin-top:3px; }
   .row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:10px; }
-  .pill { display:flex; align-items:center; gap:4px; border-radius:999px; padding:3px 9px; font-size:11px; border:1px solid; }
-  .pill .num { font-family:var(--fm); font-weight:700; font-size:12px; }
-  .tag-cat { font-size:11px; color:var(--dim); background:var(--surface-2); border-radius:999px; padding:3px 9px; }
-  .tag-match { font-size:11px; color:var(--accent); background:var(--accent-weak); border-radius:999px; padding:3px 9px; }
+  .pill { display:flex; align-items:center; gap:4px; border-radius:999px; padding:4px 10px; font-size:11px; border:1px solid; }
+  .pill .num { font-family:var(--fm); font-weight:700; font-size:13px; letter-spacing:.02em; }
+  .tag-cat { font-size:10.5px; color:var(--dim); background:var(--surface-1); border-radius:999px; padding:3px 8px; }
+  .tag-match { font-size:10.5px; color:var(--accent); background:var(--accent-weak); border-radius:999px; padding:3px 8px; }
   .mini { background:none; border:none; padding:4px; cursor:pointer; display:flex; flex-shrink:0; }
   .cardactions { display:flex; gap:8px; margin-top:10px; }
   .cardactions button { flex:1; min-width:0; font-size:11px; font-weight:700; padding:7px 6px; border-radius:10px;
@@ -218,6 +220,15 @@ const CAT_EMOJI = { "動画":"🎬", "音楽":"🎵", "雑誌":"📖", "フー�
 const tagLabel = (id) => { const t = SITUATION_TAGS.find(x => x.id === id); return t ? t.label : id; };
 const campaignMatchesTags = (c, ids) => Array.isArray(c.tags) && c.tags.some(t => ids.includes(t));
 
+// アクセス解析イベント（GoatCounter が読み込まれていれば送る。イベント名のみ・個人情報なし）
+function track(name) {
+  try {
+    if (window.goatcounter && typeof window.goatcounter.count === "function") {
+      window.goatcounter.count({ path: "evt/" + name, title: name, event: true });
+    }
+  } catch (e) {}
+}
+
 /* ============================ 日付ユーティリティ ============================ */
 function startOfToday() { const d = new Date(); d.setHours(0,0,0,0); return d; }
 function parseISO(s) { const [y,m,d] = String(s).split("-").map(Number); return new Date(y, m-1, d); }
@@ -268,6 +279,7 @@ function makeICS(c, endISO) {
 }
 function addToCalendar(c, endISO) {
   try {
+    track("calendar_added");
     const blob = new Blob([makeICS(c, endISO)], { type: "text/calendar;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -344,7 +356,7 @@ function urgencyOf(days) {
   if (days < 0)  return { c:"var(--faint)", bg:"var(--surface-2)",  bd:"var(--line)",   icon:"clock" };
   if (days <= 3) return { c:"var(--red)",   bg:"var(--red-weak)",   bd:"var(--red)",    icon:"flame" };
   if (days <= 7) return { c:"var(--amber)", bg:"var(--amber-weak)", bd:"var(--amber)",  icon:"clock" };
-  return               { c:"var(--accent)", bg:"var(--accent-weak)", bd:"var(--accent)", icon:"clock" };
+  return               { c:"var(--dim)",   bg:"var(--surface-2)",  bd:"var(--line)",   icon:"clock" }; // 余裕あり＝中立色
 }
 function badgeText(days) {
   if (days < 0) return "受付終了";
@@ -440,17 +452,21 @@ function App() {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [set, state.consentAccepted, state.onboarded]);
 
+  useEffect(() => { track("open"); }, []);
+  const goTab = (k) => { setTab(k); track("tab/" + k); };
+
   /* ---- 操作 ---- */
-  const toggleFav = (id) => set(p => ({
-    favorites: p.favorites.includes(id) ? p.favorites.filter(x => x !== id) : p.favorites.concat(id),
-  }));
+  const toggleFav = (id) => {
+    if (!state.favorites.includes(id)) track("favorite_add");
+    set(p => ({ favorites: p.favorites.includes(id) ? p.favorites.filter(x => x !== id) : p.favorites.concat(id) }));
+  };
   const toggleService = (svc) => set(p => ({
     followedServices: p.followedServices.includes(svc) ? p.followedServices.filter(x => x !== svc) : p.followedServices.concat(svc),
   }));
   const toggleCategory = (cat) => set(p => ({
     followedCategories: p.followedCategories.includes(cat) ? p.followedCategories.filter(x => x !== cat) : p.followedCategories.concat(cat),
   }));
-  const setUsage = (id, startDate) => set(p => ({ usage: Object.assign({}, p.usage, { [id]: { startDate } }) }));
+  const setUsage = (id, startDate) => { track("trial_recorded"); set(p => ({ usage: Object.assign({}, p.usage, { [id]: { startDate } }) })); };
   const clearUsage = (id) => set(p => { const u = Object.assign({}, p.usage); delete u[id]; return { usage: u }; });
   const toggleTag = (tid) => set(p => ({
     interestTags: p.interestTags.includes(tid) ? p.interestTags.filter(x => x !== tid) : p.interestTags.concat(tid),
@@ -492,7 +508,7 @@ function App() {
           { k:"active", ic:"clock", label:"利用中" },
           { k:"settings", ic:"gear", label:"設定" },
         ].map(it => (
-          <div key={it.k} className={tab === it.k ? "on" : ""} onClick={() => setTab(it.k)}>
+          <div key={it.k} className={tab === it.k ? "on" : ""} onClick={() => goTab(it.k)}>
             <Icon name={it.ic} size={19} color={tab === it.k ? "var(--accent)" : "var(--dim)"} />
             <span>{it.label}</span>
           </div>
@@ -967,7 +983,14 @@ function ConsentScreen({ onAccept, openDoc, doc }) {
       {doc && <DocScreen kind={doc} onClose={() => openDoc(null)} />}
       <div className="fullscreen doc" style={{ position:"relative", zIndex:1 }}>
         <div className="h-title" style={{ fontSize:24 }}>見逃さん<span className="beta">β</span></div>
-        <p style={{ margin:"6px 0 14px" }}>サブスク・キャッシュレス決済の「無料期間」「割引」を見逃さないためのアプリです。ご利用の前に以下をご確認ください。</p>
+        <p style={{ margin:"6px 0 14px" }}>サブスクの「無料期間」「割引」を見逃さないためのアプリです。ご利用の前に以下をご確認ください。</p>
+
+        <div style={{ background:"var(--surface-2)", borderRadius:12, padding:"12px 14px", margin:"0 0 18px", fontSize:12.5, lineHeight:1.9 }}>
+          <b>3行でいうと</b><br />
+          ・掲載情報は参考。<b>登録前に必ず公式サイトで確認</b><br />
+          ・お気に入り等の登録内容は<b>この端末内だけ</b>に保存<br />
+          ・解約し忘れによる課金など、行動の結果には運営は責任を負えません
+        </div>
 
         <h4>免責事項</h4>
         <ul>
@@ -980,6 +1003,7 @@ function ConsentScreen({ onAccept, openDoc, doc }) {
         <ul>
           <li>お気に入り・フォロー・利用開始日・関心カテゴリ・通知設定は、<b>すべてこの端末内（ブラウザ）にのみ保存</b>され、サーバーには送信されません。</li>
           <li>広告目的での外部提供・第三者提供は行いません。</li>
+          <li>利用状況の把握のため、Cookie を使わない解析（GoatCounter）でページ閲覧数・参照元・操作回数を計測します。個人の登録内容は送信しません。</li>
           <li>「いつどのサブスクに登録したか」はプライベート性の高い情報です。設定画面からいつでも全データを削除できます。</li>
           <li>関心カテゴリは本人が任意で選んだ情報のみを使い、性別・年代などのセンシティブな属性の取得や、行動履歴からの推定は行いません。</li>
         </ul>
@@ -1014,6 +1038,7 @@ function QuickAddBody({ s, onDone, onSkip }) {
     const d = startOfToday();
     d.setDate(d.getDate() - WHEN[whenIdx][1]);
     const iso = toISO(d);
+    track("quickadd/" + picked.size);
     s.set(p => {
       const u = Object.assign({}, p.usage);
       picked.forEach(id => { u[id] = { startDate: iso }; });
@@ -1217,9 +1242,11 @@ function DocScreen({ kind, onClose }) {
           <h4>取得する情報</h4>
           <p>本アプリは、お気に入りにしたキャンペーン、フォローしたサービス／カテゴリ、記録した利用開始日、選択した関心カテゴリ、表示テーマ、通知のオン／オフ設定、通知履歴を保存します。氏名・メールアドレス・電話番号・アカウントは取得しません。</p>
           <h4>保存場所</h4>
-          <p>上記の情報はすべて、お使いの端末のブラウザ内（localStorage）にのみ保存されます。運営のサーバーや第三者へ送信・保存されることはありません。</p>
+          <p>上記の情報（お気に入り・フォロー・利用開始日・関心カテゴリ・通知履歴など）はすべて、お使いの端末のブラウザ内（localStorage）にのみ保存されます。運営のサーバーや第三者へ送信・保存されることはありません。</p>
           <h4>利用目的</h4>
           <p>アプリ内での一覧表示、フォロー中の絞り込み、終了3日前などのリマインド判定、関心カテゴリに基づく「あなた向け」表示と新着通知の出し分けにのみ利用します。</p>
+          <h4>アクセス解析について</h4>
+          <p>どこから来た人がどのくらい使っているかを把握するため、Cookie を使わないアクセス解析（GoatCounter）を利用しています。記録されるのは、ページの閲覧、参照元（リンク元）、おおよその地域（国）、ブラウザ・画面サイズ、および「利用開始日を記録した」「カレンダーに追加した」などの操作の<b>回数</b>です。個人を特定する情報や IP アドレスは保存されず、どのサービスをお気に入りにしたか等の<b>あなたの登録内容は送信されません</b>。現時点でこの計測をオフにする設定はありません。</p>
           <h4>第三者提供</h4>
           <p>取得した情報を広告目的で外部に提供したり、第三者に販売・提供したりすることはありません。</p>
           <h4>関心カテゴリについて</h4>
@@ -1239,6 +1266,14 @@ function DocScreen({ kind, onClose }) {
 /* ============================ マウント ============================ */
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
+
+<!--
+  アクセス解析（GoatCounter・Cookie不使用・個人を特定しない・無料）
+  ダッシュボード: https://minogasan.goatcounter.com/
+  計測先を変えるときは下の data-goatcounter の URL を差し替える。
+-->
+<script data-goatcounter="https://minogasan.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
 
 <script>
   /* PWA: Service Worker 登録（https または localhost でのみ有効） */
