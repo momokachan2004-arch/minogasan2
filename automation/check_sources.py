@@ -26,6 +26,21 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC_FILE = ROOT / "automation" / "sources.json"
 SNAP_DIR = ROOT / "automation" / "snapshots"
 REPORT_FILE = ROOT / "automation" / "LAST_REPORT.md"
+CAMP_FILE = ROOT / "campaigns.js"
+
+STALE_DAYS = 90  # lastChecked がこれより古いエントリは「再確認」に出す
+
+# 「発見」の見出しから落とすノイズ語（BtoB・IR・調査系など、見逃さんに載せない類）。
+# 誤って消したくなければ語を削る。逆に増やせば静かになる。
+NOISE = [
+    "請求書", "課金基盤", "決済基盤", "決済代行", "サブスク管理", "サブスクリプション管理",
+    "BtoB", "B2B", "SaaS", "API連携", "システム連携", "業務効率化ツール",
+    "ウェビナー", "セミナー", "展示会", "カンファレンス", "勉強会", "登壇", "出展",
+    "資金調達", "シリーズA", "シリーズB", "業務提携", "資本提携", "M&A", "子会社化",
+    "導入事例", "代理店", "パートナー募集", "調査を実施", "意識調査", "実態調査",
+    "白書", "レポートを公開", "人事", "役員", "オフィス移転", "本社移転",
+    "認証取得", "ISO", "ISMS", "Pマーク", "特許取得", "上場", "IPO", "決算", "統合報告書",
+]
 
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0 Safari/537.36")
@@ -89,6 +104,33 @@ def load(kind: str):
     return items
 
 
+def is_noise(text: str) -> bool:
+    return any(w.lower() in text.lower() for w in NOISE)
+
+
+def scan_campaigns():
+    """campaigns.js を読み、期限切れ・情報が古いエントリを洗い出す。"""
+    expired, stale = [], []
+    if not CAMP_FILE.exists():
+        return expired, stale
+    txt = CAMP_FILE.read_text(encoding="utf-8")
+    # 冒頭の説明コメント（書き方の例に id: 3001 等が入っている）を除外
+    txt = txt.split("window.CAMPAIGNS", 1)[-1]
+    today = datetime.date.today().isoformat()
+    cutoff = (datetime.date.today() - datetime.timedelta(days=STALE_DAYS)).isoformat()
+    for m in re.finditer(r"\bid:\s*(\d+)", txt):
+        chunk = txt[m.start(): m.start() + 700]
+        svc = re.search(r'service:\s*"([^"]+)"', chunk)
+        name = svc.group(1) if svc else f"id {m.group(1)}"
+        dl = re.search(r'deadline:\s*"(\d{4}-\d{2}-\d{2})"', chunk)
+        if dl and dl.group(1) < today:
+            expired.append((name, dl.group(1)))
+        lc = re.search(r'lastChecked:\s*"(\d{4}-\d{2}-\d{2})"', chunk)
+        if lc and lc.group(1) < cutoff:
+            stale.append((name, lc.group(1)))
+    return expired, stale
+
+
 def main() -> int:
     changed, gone, soft_fail, created, discoveries = [], [], [], [], []
 
@@ -136,14 +178,31 @@ def main() -> int:
             created.append((name + "（発見）", url))
             continue
         old = set(snap.read_text(encoding="utf-8").splitlines())
-        fresh = [h for h in heads if h not in old]
+        fresh = [h for h in heads if h not in old and not is_noise(h)]
         if fresh:
             discoveries.append((name, url, fresh[:20]))
         snap.write_text("\n".join(heads), encoding="utf-8")
 
+    # ---- campaigns.js の点検（期限切れ・情報が古い）----
+    expired, stale = scan_campaigns()
+
     # ---- レポート ----
     today = datetime.date.today().isoformat()
     out = [f"# キャンペーン巡回レポート {today}", ""]
+
+    if expired:
+        out.append(f"## ⏰ 締切を過ぎているエントリ（{len(expired)}件）— campaigns.js を更新 or 削除")
+        out.append("")
+        for name, d in expired:
+            out.append(f"- **{name}** — deadline `{d}` は過去。受付終了なら削除、続いているなら日付更新")
+        out.append("")
+
+    if stale:
+        out.append(f"## 🕰️ 確認から{STALE_DAYS}日以上（{len(stale)}件）— そろそろ再確認")
+        out.append("")
+        for name, d in stale:
+            out.append(f"- {name} — 最終確認 `{d}`")
+        out.append("")
 
     if discoveries:
         total = sum(len(f) for _, _, f in discoveries)
@@ -184,16 +243,17 @@ def main() -> int:
             out.append(f"- {name} — {url}")
         out.append("")
 
-    if not (discoveries or changed or gone or created):
-        out.append("変化なし。")
+    if not (discoveries or changed or gone or created or expired):
+        out.append("変化なし。" + (f"（{len(stale)}件が確認から日数経過）" if stale else ""))
 
     report = "\n".join(out)
     REPORT_FILE.write_text(report + "\n", encoding="utf-8")
     print(report)
 
-    has_changes = bool(discoveries or changed or gone or created)
-    summary = (f"{len(discoveries)} discover, {len(changed)} changed, "
-               f"{len(gone)} gone, {len(soft_fail)} failed, {len(created)} new")
+    # PR を作るのは実際に手を動かす必要があるとき。stale / soft_fail だけでは作らない。
+    has_changes = bool(discoveries or changed or gone or created or expired)
+    summary = (f"{len(discoveries)} discover, {len(changed)} changed, {len(expired)} expired, "
+               f"{len(gone)} gone, {len(soft_fail)} failed, {len(stale)} stale, {len(created)} new")
     gh_out = os.environ.get("GITHUB_OUTPUT")
     if gh_out:
         with open(gh_out, "a", encoding="utf-8") as f:

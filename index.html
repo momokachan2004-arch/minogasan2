@@ -635,6 +635,8 @@ function CampaignCard({ c, s }) {
 
   const endISO = started ? personalEndISO(c, state.usage[c.id].startDate) : null;
   const endLeft = endISO ? daysUntil(endISO) : null;
+  const checkedAgeDays = c.lastChecked ? -daysUntil(c.lastChecked) : null;
+  const staleInfo = checkedAgeDays != null && checkedAgeDays > 120;
 
   return (
     <div className="card">
@@ -675,9 +677,11 @@ function CampaignCard({ c, s }) {
             <span className="tag-cat">{c.category}</span>
             {matched && <span className="tag-match">関心に合致</span>}
             {c.lastChecked && (
-              (c.source === "公式" || c.source === "運営確認")
-                ? <span className="tag-match" title={(c.source || "確認") + ": " + fmtMD(c.lastChecked)}>✓ {fmtMD(c.lastChecked)} {c.source === "運営確認" ? "確認" : "公式確認"}</span>
-                : <span className="tag-cat" title={"出どころ: " + (c.source || "不明") + "（要公式確認）"}>{fmtMD(c.lastChecked)} 調査</span>
+              staleInfo
+                ? <span className="tag-cat" style={{ color:"var(--amber)", border:"1px solid var(--amber)", background:"var(--amber-weak)" }} title={"最終確認から約" + checkedAgeDays + "日。条件が変わっている可能性があります"}>⚠ 確認から{checkedAgeDays}日</span>
+                : (c.source === "公式" || c.source === "運営確認")
+                  ? <span className="tag-match" title={(c.source || "確認") + ": " + fmtMD(c.lastChecked)}>✓ {fmtMD(c.lastChecked)} {c.source === "運営確認" ? "確認" : "公式確認"}</span>
+                  : <span className="tag-cat" title={"出どころ: " + (c.source || "不明") + "（要公式確認）"}>{fmtMD(c.lastChecked)} 調査</span>
             )}
           </div>
         )}
