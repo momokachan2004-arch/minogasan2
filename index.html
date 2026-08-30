@@ -434,6 +434,7 @@ function App() {
           onBell={() => { setShowNotif(true); set({ notifSeenAt: Date.now() }); }} unseen={unseen} />}
         {tab === "category" && <CategoryScreen s={s} goHome={(cat) => { setCategory(cat); setTab("home"); }} />}
         {tab === "favorites" && <FavoritesScreen s={s} />}
+        {tab === "active" && <ActiveScreen s={s} goHome={() => setTab("home")} />}
         {tab === "settings" && <SettingsScreen s={s} openDoc={setDoc} />}
         {saveError && <div style={{ textAlign:"center", color:"var(--red)", fontSize:11, padding:"4px 0 12px" }}>保存に失敗しました。空き容量をご確認ください</div>}
       </div>
@@ -443,6 +444,7 @@ function App() {
           { k:"home", ic:"home", label:"ホーム" },
           { k:"category", ic:"tag", label:"カテゴリ" },
           { k:"favorites", ic:"heart", label:"フォロー中" },
+          { k:"active", ic:"clock", label:"利用中" },
           { k:"settings", ic:"gear", label:"設定" },
         ].map(it => (
           <div key={it.k} className={tab === it.k ? "on" : ""} onClick={() => setTab(it.k)}>
@@ -610,6 +612,106 @@ function FavoritesScreen({ s }) {
         </div>
       )}
       <List list={list} s={s} emptyText={"まだフォローしていません。\nキャンペーンの♡か、カードの「フォロー」から追加できます。"} />
+    </div>
+  );
+}
+
+/* ============================ 利用中（解約リマインド）============================ */
+function ActiveScreen({ s, goHome }) {
+  const { state } = s;
+  const items = Object.keys(state.usage)
+    .map(id => {
+      const c = CAMPAIGNS.find(x => x.id === Number(id));
+      if (!c || !c.freeDays) return null;
+      const startISO = state.usage[id].startDate;
+      const endISO = personalEndISO(c, startISO);
+      return { c, startISO, endISO, left: daysUntil(endISO) };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.left - b.left);
+
+  const active = items.filter(x => x.left >= 0);
+  const soon = items.filter(x => x.left >= 0 && x.left <= 3);
+  const ended = items.filter(x => x.left < 0);
+
+  return (
+    <div>
+      <div className="screen-h">利用中</div>
+      <div className="screen-sub">「利用開始日を記録」したキャンペーンを、無料期間の終了が近い順に表示します。終了3日前に通知でもお知らせします。</div>
+
+      {items.length > 0 && (
+        <div className="summary" style={{
+          background: soon.length ? "linear-gradient(90deg, var(--red-weak), transparent)" : "var(--accent-weak)",
+          borderColor: soon.length ? "var(--red)" : "color-mix(in srgb, var(--accent) 30%, transparent)",
+          cursor: "default",
+        }}>
+          <Icon name={soon.length ? "flame" : "clock"} size={16} color={soon.length ? "var(--red)" : "var(--accent)"} />
+          <span>
+            無料期間中 <b>{active.length}件</b>
+            {soon.length > 0 && <> ／ <b style={{ color:"var(--red)" }}>3日以内に終了 {soon.length}件</b></>}
+          </span>
+        </div>
+      )}
+
+      {items.length === 0 ? (
+        <div className="empty">
+          まだ登録がありません。<br />
+          気になるキャンペーンを始めたら、そのカードの<br />「開始日を記録」を押しておくと、<br />
+          無料期間の<b>終了3日前</b>にお知らせします。
+          <div style={{ marginTop:16 }}>
+            <button className="btn btn-primary" style={{ width:"auto", padding:"10px 18px" }} onClick={goHome}>キャンペーンを見る</button>
+          </div>
+        </div>
+      ) : (
+        <div className="list">
+          {items.map(({ c, startISO, endISO, left }) => {
+            const urgent = left <= 3;
+            const col = left < 0 ? "var(--faint)" : left <= 1 ? "var(--red)" : left <= 3 ? "var(--amber)" : "var(--accent)";
+            return (
+              <div key={c.id} className="card" style={{ borderLeft: "3px solid " + col }}>
+                <div className="card-main" style={{ padding:"14px" }}>
+                  <div className="card-main-top">
+                    <div style={{ minWidth:0, cursor:"pointer" }} onClick={() => s.setDetailId(c.id)}>
+                      <div className="svc">{c.service}</div>
+                      <div className="ttl">{c.title}</div>
+                    </div>
+                    <div style={{ textAlign:"right", flexShrink:0 }}>
+                      <div style={{ fontFamily:"var(--fm)", fontWeight:700, fontSize:20, color:col, lineHeight:1.1 }}>
+                        {left < 0 ? "終了" : left === 0 ? "本日" : "あと" + left + "日"}
+                      </div>
+                      <div style={{ fontSize:10.5, color:"var(--dim)", marginTop:2 }}>{fmtJP(endISO)}</div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize:11.5, color:"var(--dim)", marginTop:8 }}>
+                    利用開始 {fmtJP(startISO)}（無料期間 {c.freeDays}日）
+                  </div>
+                  {left >= 0 && left <= 3 && (
+                    <div style={{ fontSize:12, color:"var(--red)", marginTop:6 }}>
+                      {left === 0 ? "本日で無料期間が終了。解約するなら今日中に。" : "解約しないと自動で有料に切り替わります。"}
+                    </div>
+                  )}
+                  {left < 0 && (
+                    <div style={{ fontSize:12, color:"var(--faint)", marginTop:6 }}>無料期間は終了しています。</div>
+                  )}
+                  <div className="cardactions" style={{ marginTop:10 }}>
+                    <button onClick={() => s.setDetailId(c.id)}>
+                      <Icon name="cal" size={13} color="var(--dim)" /> 日付を直す
+                    </button>
+                    <button className="on" onClick={() => s.clearUsage(c.id)}>
+                      <Icon name="check" size={13} color="var(--accent)" /> 解約した / 消す
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {ended.length > 0 && (
+            <div style={{ fontSize:11, color:"var(--faint)", textAlign:"center", padding:"4px 0" }}>
+              終了済み {ended.length}件は「解約した / 消す」で片付けられます
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
