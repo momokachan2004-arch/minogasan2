@@ -11,7 +11,7 @@
 ├─ campaigns編集ガイド.md    ← campaigns.js の追加・修正・削除・反映の手順
 ├─ manifest.webmanifest     ← PWA（スマホのホーム画面アプリ）用の定義
 ├─ sw.js                    ← Service Worker（オフライン用キャッシュ）
-├─ icon-192.png / icon-512.png / icon-maskable-512.png  ← アプリアイコン
+├─ icon-192-v2.png / icon-512-v2.png / icon-maskable-512-v2.png  ← アプリアイコン
 ├─ ローカルで開く.bat        ← ダブルクリックでローカルサーバー起動（任意）
 ├─ _server.ps1              ← 上記batが使う簡易サーバー
 ├─ automation/              ← 定期更新の下準備（巡回リスト・運用メモ・スケジュール指示文）

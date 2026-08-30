@@ -2,14 +2,14 @@
    - 同じ場所にある HTML / campaigns.js は「ネットワーク優先」（最新を取りに行き、失敗したらキャッシュ）
    - React・フォントなどの外部ファイルは「キャッシュ優先」（初回オンライン後はオフラインでも動く）
    キャッシュを作り直したいときは下の CACHE の数字を上げてください。 */
-const CACHE = "minogasan-cache-v4";
+const CACHE = "minogasan-cache-v5";
 const CORE = [
   "./index.html",
   "./campaigns.js",
   "./manifest.webmanifest",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./icon-maskable-512.png",
+  "./icon-192-v2.png",
+  "./icon-512-v2.png",
+  "./icon-maskable-512-v2.png",
 ];
 
 self.addEventListener("install", (e) => {
