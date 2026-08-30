@@ -13,7 +13,11 @@
     { "name": "PR TIMES『ワンコイン』",     "url": "https://prtimes.jp/topics/keywords/%E3%83%AF%E3%83%B3%E3%82%B3%E3%82%A4%E3%83%B3" },
     { "name": "PR TIMES『半額』",           "url": "https://prtimes.jp/topics/keywords/%E5%8D%8A%E9%A1%8D" },
     { "name": "PR TIMES『初回無料』",       "url": "https://prtimes.jp/topics/keywords/%E5%88%9D%E5%9B%9E%E7%84%A1%E6%96%99" },
-    { "name": "PR TIMES『無料体験』",       "url": "https://prtimes.jp/topics/keywords/%E7%84%A1%E6%96%99%E4%BD%93%E9%A8%93" }
+    { "name": "PR TIMES『無料体験』",       "url": "https://prtimes.jp/topics/keywords/%E7%84%A1%E6%96%99%E4%BD%93%E9%A8%93" },
+    { "_note": "ここから下は『値上げアラート』用。掲載中サービスの値上げ発表を拾う。BtoB/調査系のノイズが多いので NOISE 語で除外＋人の目で選別。" },
+    { "name": "PR TIMES『値上げ』",         "url": "https://prtimes.jp/topics/keywords/%E5%80%A4%E4%B8%8A%E3%81%92" },
+    { "name": "PR TIMES『価格改定』",       "url": "https://prtimes.jp/topics/keywords/%E4%BE%A1%E6%A0%BC%E6%94%B9%E5%AE%9A" },
+    { "name": "PR TIMES『料金改定』",       "url": "https://prtimes.jp/topics/keywords/%E6%96%99%E9%87%91%E6%94%B9%E5%AE%9A" }
   ],
 
   "aggregators": [
