@@ -367,6 +367,7 @@ function App() {
   const [detailId, setDetailId] = useState(null);
   const [doc, setDoc] = useState(null);          // "disclaimer" | "privacy"
   const [showNotif, setShowNotif] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   const set = useCallback((patch) => {
     setStateRaw(prev => {
@@ -434,8 +435,8 @@ function App() {
           onBell={() => { setShowNotif(true); set({ notifSeenAt: Date.now() }); }} unseen={unseen} />}
         {tab === "category" && <CategoryScreen s={s} goHome={(cat) => { setCategory(cat); setTab("home"); }} />}
         {tab === "favorites" && <FavoritesScreen s={s} />}
-        {tab === "active" && <ActiveScreen s={s} goHome={() => setTab("home")} />}
-        {tab === "settings" && <SettingsScreen s={s} openDoc={setDoc} />}
+        {tab === "active" && <ActiveScreen s={s} goHome={() => setTab("home")} onQuickAdd={() => setShowQuickAdd(true)} />}
+        {tab === "settings" && <SettingsScreen s={s} openDoc={setDoc} onQuickAdd={() => setShowQuickAdd(true)} />}
         {saveError && <div style={{ textAlign:"center", color:"var(--red)", fontSize:11, padding:"4px 0 12px" }}>保存に失敗しました。空き容量をご確認ください</div>}
       </div>
 
@@ -458,6 +459,7 @@ function App() {
         <DetailSheet s={s} c={CAMPAIGNS.find(x => x.id === detailId)} onClose={() => setDetailId(null)} />
       )}
       {showNotif && <NotifSheet log={state.notifLog} onClose={() => setShowNotif(false)} />}
+      {showQuickAdd && <QuickAddBody s={s} onDone={() => setShowQuickAdd(false)} onSkip={() => setShowQuickAdd(false)} />}
       {doc && <DocScreen kind={doc} onClose={() => setDoc(null)} />}
     </div>
   );
@@ -617,7 +619,7 @@ function FavoritesScreen({ s }) {
 }
 
 /* ============================ 利用中（解約リマインド）============================ */
-function ActiveScreen({ s, goHome }) {
+function ActiveScreen({ s, goHome, onQuickAdd }) {
   const { state } = s;
   const items = Object.keys(state.usage)
     .map(id => {
@@ -638,6 +640,11 @@ function ActiveScreen({ s, goHome }) {
     <div>
       <div className="screen-h">利用中</div>
       <div className="screen-sub">「利用開始日を記録」したキャンペーンを、無料期間の終了が近い順に表示します。終了3日前に通知でもお知らせします。</div>
+      {items.length > 0 && (
+        <button className="link" style={{ margin:"0 16px 10px", display:"flex", alignItems:"center", gap:5 }} onClick={onQuickAdd}>
+          <Icon name="plus" size={13} color="var(--accent)" /> 使い始めたサブスクをまとめて登録
+        </button>
+      )}
 
       {items.length > 0 && (
         <div className="summary" style={{
@@ -656,10 +663,11 @@ function ActiveScreen({ s, goHome }) {
       {items.length === 0 ? (
         <div className="empty">
           まだ登録がありません。<br />
-          気になるキャンペーンを始めたら、そのカードの<br />「開始日を記録」を押しておくと、<br />
+          無料トライアルで使い始めたサブスクを登録すると、<br />
           無料期間の<b>終了3日前</b>にお知らせします。
-          <div style={{ marginTop:16 }}>
-            <button className="btn btn-primary" style={{ width:"auto", padding:"10px 18px" }} onClick={goHome}>キャンペーンを見る</button>
+          <div style={{ marginTop:16, display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap" }}>
+            <button className="btn btn-primary" style={{ width:"auto", padding:"10px 18px" }} onClick={onQuickAdd}>まとめて登録</button>
+            <button className="btn btn-ghost" style={{ width:"auto", padding:"10px 18px" }} onClick={goHome}>キャンペーンを見る</button>
           </div>
         </div>
       ) : (
@@ -931,13 +939,68 @@ function ConsentScreen({ onAccept, openDoc, doc }) {
   );
 }
 
+/* ============================ 使い始めたサブスクをまとめて登録 ============================ */
+function QuickAddBody({ s, onDone, onSkip }) {
+  const trackable = CAMPAIGNS.filter(c => c.freeDays)
+    .sort((a, b) => a.service.localeCompare(b.service, "ja"));
+  const [picked, setPicked] = useState(() => new Set());
+  const [whenIdx, setWhenIdx] = useState(0);
+  const WHEN = [["今日", 0], ["2〜3日前", 3], ["約1週間前", 7], ["約2週間前", 14], ["約1か月前", 30]];
+  const toggle = (id) => setPicked(p => {
+    const n = new Set(p);
+    n.has(id) ? n.delete(id) : n.add(id);
+    return n;
+  });
+  const save = () => {
+    const d = startOfToday();
+    d.setDate(d.getDate() - WHEN[whenIdx][1]);
+    const iso = toISO(d);
+    s.set(p => {
+      const u = Object.assign({}, p.usage);
+      picked.forEach(id => { u[id] = { startDate: iso }; });
+      return { usage: u };
+    });
+    onDone();
+  };
+  return (
+    <div className="fullscreen doc">
+      <h2>使い始めたサブスクを登録</h2>
+      <p>最近 無料トライアルで使い始めたものはありますか？登録すると、無料期間の<b>終了3日前</b>に通知でお知らせします。日付はあとから「利用中」でいつでも直せます。</p>
+      <h4>だいたいいつ始めた？</h4>
+      <div className="tagpick">
+        {WHEN.map(([label], i) => (
+          <button key={i} className={whenIdx === i ? "on" : ""} onClick={() => setWhenIdx(i)}>{label}</button>
+        ))}
+      </div>
+      <h4>使い始めたサービス（複数可）</h4>
+      <div className="tagpick">
+        {trackable.map(c => (
+          <button key={c.id} className={picked.has(c.id) ? "on" : ""} onClick={() => toggle(c.id)}>{c.icon} {c.service}</button>
+        ))}
+      </div>
+      <div style={{ flex:1, minHeight:12 }} />
+      <button className="btn btn-primary" style={{ marginBottom:8 }} disabled={picked.size === 0} onClick={save}>
+        {picked.size ? picked.size + "件を登録" : "使い始めたものを選ぶ"}
+      </button>
+      <button className="btn btn-ghost" onClick={onSkip || onDone}>スキップ</button>
+    </div>
+  );
+}
+
 /* ============================ オンボーディング ============================ */
 function Onboarding({ s }) {
+  const [step, setStep] = useState(1);
   const [picked, setPicked] = useState([]);
-  const finish = (enable) => {
-    s.set({ onboarded: true, personalizeEnabled: enable && picked.length > 0, interestTags: enable ? picked : [] });
-  };
   const toggle = (id) => setPicked(p => p.includes(id) ? p.filter(x => x !== id) : p.concat(id));
+  const finalize = () => s.set({ onboarded: true, personalizeEnabled: picked.length > 0, interestTags: picked });
+
+  if (step === 2) {
+    return (
+      <div className="frame">
+        <QuickAddBody s={s} onDone={finalize} onSkip={finalize} />
+      </div>
+    );
+  }
   return (
     <div className="frame">
       <div className="fullscreen doc">
@@ -953,18 +1016,19 @@ function Onboarding({ s }) {
         </div>
         <p style={{ fontSize:11.5, color:"var(--dim)" }}>関心カテゴリは通知や表示の出し分けにのみ使用し、広告販売や外部提供には使いません。</p>
         <div style={{ flex:1 }} />
-        <button className="btn btn-primary" style={{ marginBottom:8 }} onClick={() => finish(true)}>
-          {picked.length ? "これで始める（" + picked.length + "件選択中）" : "選択して始める"}
+        <button className="btn btn-primary" style={{ marginBottom:8 }} onClick={() => setStep(2)}>
+          {picked.length ? "次へ（" + picked.length + "件選択中）" : "次へ"}
         </button>
-        <button className="btn btn-ghost" onClick={() => finish(false)}>入力せずに始める</button>
+        <button className="btn btn-ghost" onClick={() => { setPicked([]); setStep(2); }}>入力せずに次へ</button>
       </div>
     </div>
   );
 }
 
 /* ============================ 設定 ============================ */
-function SettingsScreen({ s, openDoc }) {
+function SettingsScreen({ s, openDoc, onQuickAdd }) {
   const { state, set } = s;
+  const usageCount = Object.keys(state.usage || {}).length;
   const [perm, setPerm] = useState(typeof Notification !== "undefined" ? Notification.permission : "unsupported");
   const [confirmWipe, setConfirmWipe] = useState(false);
 
@@ -994,6 +1058,12 @@ function SettingsScreen({ s, openDoc }) {
             <button key={v} className={theme === v ? "on" : ""} onClick={() => set({ theme: v })}>{label}</button>
           ))}
         </div>
+      </div>
+
+      <div className="sect">
+        <h3>利用中のサブスク</h3>
+        <p>無料トライアルで使い始めたサブスクを登録すると、「利用中」タブに一覧され、無料期間の終了3日前に通知します（現在 {usageCount} 件）。</p>
+        <button className="btn btn-ghost" style={{ marginBottom:8 }} onClick={onQuickAdd}>使い始めたサブスクをまとめて登録</button>
       </div>
 
       <div className="sect">
