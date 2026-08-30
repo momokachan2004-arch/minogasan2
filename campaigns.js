@@ -294,6 +294,18 @@ window.CAMPAIGNS = [
     lastChecked: "2026-08-30", source: "運営確認",
   },
   {
+    // 2026-08-30 PR TIMES の巡回から発見 → 運営が内容確認。
+    // 雑誌「歴史群像」の記事がスマホ・PCで読み放題になる新サブスク（2026-08-01 開始）。
+    // 月額880円（税込）。入会から最初の3か月無料は「2026-10-31 までの入会」が対象。
+    // ※ url は歴史群像の公式サイト。サービス専用ページが分かれば差し替える。
+    id: 3180, service: "歴史群像PREMIUM", icon: "📜", category: "雑誌",
+    title: "入会から3か月無料", detail: "「歴史群像」の記事がスマホ・PCで読み放題。3か月無料は2026/10/31までの入会が対象。以降 月額880円",
+    url: "https://rekigun.net/",
+    deadline: "2026-10-31", freeDays: 90, hasCancellation: true, addedAt: "2026-08-30",
+    tags: ["senior"],
+    lastChecked: "2026-08-30", source: "運営確認",
+  },
+  {
     id: 3113, service: "Amazon Music Unlimited", icon: "🎵", category: "音楽",
     title: "新規登録で30日間無料", detail: "常時実施。再登録者向けに「3か月 月額300円」キャンペーンをやっていることも",
     url: "https://www.amazon.co.jp/music/unlimited",
