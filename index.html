@@ -234,6 +234,50 @@ function sortKey(c) {
 }
 const isUrgent = (c) => !!c.deadline && daysUntil(c.deadline) >= 0 && daysUntil(c.deadline) <= 3;
 function personalEndISO(c, startISO) { return c.freeDays ? toISO(addDays(parseISO(startISO), c.freeDays)) : null; }
+
+/* ---- カレンダー(.ics)で解約リマインド ---- */
+function icsStamp(d) {
+  const p = n => String(n).padStart(2, "0");
+  return "" + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + "T" + p(d.getHours()) + p(d.getMinutes()) + "00";
+}
+function icsEsc(s) { return String(s).replace(/([,;\\])/g, "\\$1").replace(/\n/g, "\\n"); }
+function makeICS(c, endISO) {
+  const end = parseISO(endISO);
+  const warn = new Date(end); warn.setDate(warn.getDate() - 3); warn.setHours(20, 0, 0, 0);
+  const last = new Date(end); last.setHours(9, 0, 0, 0);
+  const uid = (k) => "minogasan-" + c.id + "-" + k + "-" + Date.now() + "@minogasan.app";
+  const ev = (start, summary, desc) => [
+    "BEGIN:VEVENT",
+    "UID:" + uid(icsStamp(start)),
+    "DTSTAMP:" + icsStamp(new Date()),
+    "DTSTART:" + icsStamp(start),
+    "DURATION:PT30M",
+    "SUMMARY:" + icsEsc(summary),
+    "DESCRIPTION:" + icsEsc(desc),
+    "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + icsEsc(summary), "TRIGGER:PT0S", "END:VALARM",
+    "END:VEVENT",
+  ].join("\r\n");
+  return [
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//minogasan//JP//JA", "CALSCALE:GREGORIAN",
+    ev(warn, "【見逃さん】" + c.service + " の無料期間があと3日で終了",
+       "解約するか決める。無料期間終了日: " + fmtJP(endISO)),
+    ev(last, "【見逃さん】" + c.service + " の無料期間が本日終了",
+       "解約するなら今日中に。"),
+    "END:VCALENDAR",
+  ].join("\r\n");
+}
+function addToCalendar(c, endISO) {
+  try {
+    const blob = new Blob([makeICS(c, endISO)], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "minogasan-" + c.service + ".ics";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+  } catch (e) {}
+}
 function ago(ts) {
   const s = Math.floor((Date.now() - ts) / 1000);
   if (s < 60) return "たった今";
@@ -709,6 +753,12 @@ function ActiveScreen({ s, goHome, onQuickAdd }) {
                       <Icon name="check" size={13} color="var(--accent)" /> 解約した / 消す
                     </button>
                   </div>
+                  {left >= 0 && (
+                    <button className="link" style={{ marginTop:8, display:"flex", alignItems:"center", gap:5 }}
+                      onClick={() => addToCalendar(c, endISO)}>
+                      <Icon name="cal" size={12} color="var(--accent)" /> カレンダーにリマインドを追加
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -855,6 +905,15 @@ function DetailSheet({ s, c, onClose }) {
               <button className="btn btn-primary" onClick={() => { s.setUsage(c.id, draft); onClose(); }}>この日で記録する</button>
               {started && <button className="btn btn-danger" onClick={() => { s.clearUsage(c.id); onClose(); }}>記録を消す</button>}
             </div>
+            {endISO && (
+              <button className="btn btn-ghost" style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}
+                onClick={() => addToCalendar(c, endISO)}>
+                <Icon name="cal" size={14} color="var(--ink)" /> カレンダーに解約リマインドを追加
+              </button>
+            )}
+            <p style={{ fontSize:11, color:"var(--dim)", marginTop:6 }}>
+              端末のカレンダーに「3日前」と「当日」の予定＋アラームを登録します（iPhoneでも確実に鳴ります）。
+            </p>
           </div>
         )}
 
@@ -1073,6 +1132,7 @@ function SettingsScreen({ s, openDoc, onQuickAdd }) {
           <div className={"sw" + (state.notifEnabled ? " on" : "")} onClick={() => set({ notifEnabled: !state.notifEnabled })}><i /></div>
         </div>
         <p>1つのキャンペーンにつき最大2回（新着追加時／終了3日前）まで通知します。終了3日前の基準日は、利用開始日を記録している場合は「あなたの無料期間終了日」、していない場合は「受付締切日」です。</p>
+        <p style={{ color:"var(--amber)" }}>アプリを閉じている間の通知は、ブラウザ版では確実に届きません（特にiPhone）。<b>「利用中」やキャンペーン詳細の「カレンダーにリマインドを追加」</b>を使うと、端末のカレンダーが確実にお知らせします。本体通知への対応はアプリ版で予定しています。</p>
         <div className="perm">
           ブラウザ通知：{perm === "granted" ? "許可済み" : perm === "denied" ? "ブロック中（ブラウザの設定から許可してください）" : perm === "unsupported" ? "この環境では利用できません" : "未許可"}
         </div>
