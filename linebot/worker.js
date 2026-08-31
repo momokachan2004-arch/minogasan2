@@ -1,4 +1,4 @@
-/* 見逃さん LINE bot — STEP 3: 利用開始日を KV に記録して「利用中」を返す
+/* 見逃さん LINE bot — STEP 4: 無料期間の終了リマインドをプッシュ
  *
  * Cloudflare Workers にダッシュボードから貼り付けてデプロイする。
  *
@@ -6,9 +6,15 @@
  *   CHANNEL_ACCESS_TOKEN … LINE Developers Console → Messaging API → チャネルアクセストークン（長期）
  *   CHANNEL_SECRET        … LINE Developers Console → Basic settings → チャネルシークレット
  *
- * ■ KV バインド（STEP 3 で追加。Settings → Bindings → Add → KV namespace）
+ * ■ KV バインド（STEP 3 で追加。Bindings タブ → Add binding → KV namespace）
  *   変数名: USAGE  （ネームスペースは新規作成でよい。例: minogasan-usage）
  *   未バインドでも STEP 2（一覧）は動く。登録系コマンドだけ「準備中」を返す。
+ *
+ * ■ Cron Trigger（STEP 4 で追加。Settings → Trigger Events → Cron Triggers）
+ *   "0 0 * * *"（毎日 00:00 UTC = 09:00 JST）を1本。
+ *   scheduled() が全ユーザーの KV を走査し、無料期間の「終了3日前」と「当日」に
+ *   push API で通知（1ユーザー分をまとめて1通）。送信済みは started[cid].n に記録して二重送信を防ぐ。
+ *   push は課金対象（無料 200通/月）。1回の実行で最大 150通に制限。
  *
  * ■ データソース
  *   GitHub Pages の campaigns.js を実行時 fetch して解析（アプリと単一ソース）。
@@ -31,9 +37,14 @@ const LISTUSAGE = ["利用中", "りようちゅう", "マイページ", "まい
 const WIPE = ["データ削除", "でーたさくじょ", "全部削除", "ぜんぶさくじょ", "リセット", "りせっと"];
 
 export default {
+  // Cron Trigger（1日1回）。無料期間の「終了3日前」と「当日」にプッシュ通知。
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runReminders(env));
+  },
+
   async fetch(request, env, ctx) {
     if (request.method === "GET") {
-      return new Response("minogasan LINE bot: OK (STEP 3)", { status: 200 });
+      return new Response("minogasan LINE bot: OK (STEP 4)", { status: 200 });
     }
     if (request.method !== "POST") {
       return new Response("Method Not Allowed", { status: 405 });
@@ -187,7 +198,9 @@ async function doRegister(env, userId, c, iso) {
   }
   if (!userId) return [textMsg("ユーザーID が取得できませんでした。友だち追加し直すと直ることがあります。")];
   const u = await loadUser(env, userId);
-  u.started[String(c.id)] = { d: iso, s: c.service };
+  // f=freeDays を控えておくと、後で campaigns.js から消えてもリマインドできる。
+  // n=送信済みリマインドのマイルストーン（["d3","d0"]）。登録し直すと自動でリセット。
+  u.started[String(c.id)] = { d: iso, s: c.service, f: c.freeDays != null ? c.freeDays : null, n: [] };
   await saveUser(env, userId, u);
   return [textMsg(startedConfirm(c, iso))];
 }
@@ -217,20 +230,18 @@ async function listUsage(env, userId, campaigns) {
 
   const rows = ids
     .map((id) => {
-      const rec = u.started[id];
-      const d = typeof rec === "string" ? rec : rec.d;
-      const snap = typeof rec === "object" && rec.s ? rec.s : null;
+      const rec = normRec(u.started[id]);
       const c = campaigns.find((x) => String(x.id) === String(id));
-      const service = (c && c.service) || snap || "ID " + id;
+      const service = (c && c.service) || rec.s || "ID " + id;
       const icon = (c && c.icon) || "🎫";
-      const freeDays = c ? c.freeDays : null;
+      const freeDays = c && c.freeDays != null ? c.freeDays : rec.f;
       let end = null;
       let n = null;
       if (freeDays) {
-        end = addDays(d, freeDays);
+        end = addDays(rec.d, freeDays);
         n = daysLeft(end);
       }
-      return { id, d, service, icon, freeDays, end, n, known: !!c };
+      return { id, d: rec.d, service, icon, freeDays, end, n, known: !!c };
     })
     .sort((a, b) => {
       if (a.n == null && b.n == null) return 0;
@@ -478,9 +489,122 @@ function helpText() {
     "「解約 Spotify」… その登録を削除",
     "「データ削除」… 自分の記録をすべて消す",
     "",
+    "無料期間の「終了3日前」と「当日」に自動でお知らせします。",
     "登録内容はリマインドのためサーバーに保存されます（「データ削除」でいつでも消去可）。",
     "掲載情報は目安です。条件は必ず公式サイトでご確認ください。",
   ].join("\n");
+}
+
+// ============================================================================
+// リマインド（Cron Trigger から呼ばれる）
+// ============================================================================
+
+const MILESTONES = [3, 0]; // 無料期間終了の「3日前」と「当日」。1件につき最大2回。
+const MAX_PUSH_PER_RUN = 150; // 無料枠（200通/月）の暴発防止
+
+async function runReminders(env) {
+  if (!env.USAGE) {
+    console.log("reminders: KV 未設定のためスキップ");
+    return;
+  }
+
+  let campaigns = [];
+  try {
+    campaigns = await getCampaigns();
+  } catch (e) {
+    console.log("reminders: getCampaigns 失敗（f 控えのみで続行）", e && e.message);
+  }
+
+  let pushCount = 0;
+  let scanned = 0;
+  let cursor;
+
+  do {
+    const page = await env.USAGE.list({ prefix: "u:", cursor });
+    cursor = page.list_complete ? null : page.cursor;
+
+    for (const k of page.keys) {
+      scanned++;
+      const userId = k.name.slice(2);
+      let u;
+      try {
+        u = await loadUser(env, userId);
+      } catch {
+        continue;
+      }
+      const started = u.started || {};
+      const due = [];
+      let changed = false;
+
+      for (const cid of Object.keys(started)) {
+        const rec = normRec(started[cid]);
+        const c = campaigns.find((x) => String(x.id) === String(cid));
+        const freeDays = rec.f != null ? rec.f : c ? c.freeDays : null;
+        if (!freeDays) continue;
+
+        const end = addDays(rec.d, freeDays);
+        const left = daysLeft(end);
+        if (left == null) continue;
+
+        for (const ms of MILESTONES) {
+          if (left !== ms) continue;
+          const tag = "d" + ms;
+          if (rec.n.includes(tag)) continue;
+          due.push({ cid, name: (c && c.service) || rec.s || "ID " + cid, end, left, ms, url: c && c.url });
+          rec.n.push(tag);
+          started[cid] = rec;
+          changed = true;
+        }
+      }
+
+      if (due.length && pushCount < MAX_PUSH_PER_RUN) {
+        const ok = await pushReminder(env, userId, due);
+        if (ok) {
+          pushCount++;
+          if (changed) await saveUser(env, userId, u); // 送信成功時のみ「送信済み」を保存
+        }
+      }
+    }
+  } while (cursor);
+
+  console.log(`reminders done: scanned=${scanned} pushes=${pushCount}`);
+}
+
+async function pushReminder(env, userId, due) {
+  const blocks = due.map((x) => {
+    if (x.ms === 0) {
+      return `⏰「${x.name}」の無料期間は本日まで（${x.end}）\nこのあと自動で有料に切り替わります。やめるなら早めに解約を。`;
+    }
+    return `⏰「${x.name}」の無料期間、あと${x.left}日（${x.end}まで）\n続けるならそのまま、やめるなら解約を。`;
+  });
+  const text =
+    blocks.join("\n\n") +
+    `\n\n「利用中」で一覧、「解約 ${due[0].name}」で登録削除できます。`;
+
+  const res = await fetch("https://api.line.me/v2/bot/message/push", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + env.CHANNEL_ACCESS_TOKEN,
+    },
+    body: JSON.stringify({ to: userId, messages: [{ type: "text", text: text.slice(0, 4900) }] }),
+  });
+  if (!res.ok) {
+    console.log("push failed", res.status, await res.text());
+    return false;
+  }
+  return true;
+}
+
+// KV レコードの形を正規化（旧形式: 文字列 / f・n 無しにも対応）
+function normRec(rec) {
+  if (typeof rec === "string") return { d: rec, s: null, f: null, n: [] };
+  return {
+    d: rec.d,
+    s: rec.s || null,
+    f: rec.f != null ? rec.f : null,
+    n: Array.isArray(rec.n) ? rec.n : [],
+  };
 }
 
 // ============================================================================

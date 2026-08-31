@@ -128,11 +128,12 @@ Worker が実行時に **GitHub Pages の `campaigns.js` をそのまま fetch**
 
 ```
 key:   u:<LINEのuserId>
-value: { started: { "<campaignId>": { d: "YYYY-MM-DD", s: "サービス名" }, ... }, updatedAt: "ISO" }
+value: { started: { "<campaignId>": { d: "YYYY-MM-DD", s: "サービス名", f: freeDays, n: ["d3"] }, ... }, updatedAt: "ISO" }
 ```
 
 - 登録操作をするまで KV には何も書かない。
-- サービス名スナップショット `s` も持つので、後で campaigns.js から消えても「利用中」に名前が残る。
+- `s`（サービス名）と `f`（freeDays）を控えるので、後で campaigns.js から消えても「利用中」もリマインドも動く。
+- `n` は送信済みリマインドのマイルストーン（`d3` / `d0`）。登録し直すと空に戻る（＝リマインドが再度有効化）。
 - 無料枠: 読み 10万/日・書き 1000/日。個人利用では当たらない。
 
 ### 追加コマンド（すべて返信メッセージ＝無料）
@@ -156,8 +157,41 @@ value: { started: { "<campaignId>": { d: "YYYY-MM-DD", s: "サービス名" }, .
 
 ---
 
+## STEP 4: 無料期間の終了リマインドをプッシュ（実装済み・要デプロイ＋Cron設定）
+
+`worker.js` を STEP 4 版に差し替えた。`scheduled()` ハンドラを追加。
+
+### 1. Cron Trigger を追加
+
+1. **Workers & Pages** → `minogasan-line-bot` → **Settings** → **Trigger Events**（または Triggers）→ **Cron Triggers** → **Add Cron Trigger**
+2. スケジュール: `0 0 * * *`（毎日 00:00 UTC = **09:00 JST**）
+3. 保存
+
+### 2. コードを貼り直す
+
+エディタ全消し → [`worker.js`](worker.js) を貼る → **Deploy**。
+
+### 動作
+
+- 1日1回、`env.USAGE` の `u:` プレフィックス全キーを走査。
+- 各登録について `開始日 + freeDays` の終了日を計算し、**残り3日** と **当日** にプッシュ。
+- 1ユーザー分の複数件は**まとめて1通**（push 課金を節約）。
+- 送信できたら `started[cid].n` に `d3` / `d0` を記録して二重送信を防止。送信失敗時は記録せず次回再試行。
+- 1回の実行で最大 **150通**（`MAX_PUSH_PER_RUN`）。無料枠は 200通/月。
+- `freeDays` が無い還元系は対象外。マイルストーンは `MILESTONES = [3, 0]`（1件あたり最大2通）。
+
+### テスト方法
+
+Cron の「今すぐ実行」はダッシュボードに無いので、いずれか:
+
+- **一時的にスケジュールを `*/10 * * * *` にして** Worker → **Logs**（Begin log stream）で `reminders done: ...` を確認 → 確認後 `0 0 * * *` に戻す。
+- テスト用の登録を作る: あるサービスを「開始日 = （その freeDays − 3）日前」で登録すると次の実行で「あと3日」通知が飛ぶ。例: freeDays 30 のサービスを「27日前」で登録。
+
+`push failed 400 ...` が Logs に出る場合はアクセストークン、`... 403` は友だち解除済みユーザー（無視してよい）。
+
+---
+
 ## この先（未着手）
 
-- STEP 4: Cron Trigger で「終了3日前」プッシュ（ここから push 課金対象。リマインドだけなら無料枠 200/月 に収まる）
 - STEP 5: リッチメニュー＋使い方＋プライバシーポリシー（サーバーがユーザーデータを持つので「端末内だけ」の説明は不可に）
 - STEP 6: 友だちに配ってオフィシャルアカウントマネージャーの分析を見る
