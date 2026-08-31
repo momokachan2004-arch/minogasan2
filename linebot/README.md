@@ -109,11 +109,13 @@ Worker が実行時に **GitHub Pages の `campaigns.js` をそのまま fetch**
 
 ### 1. KV ネームスペースを作ってバインド
 
-1. Cloudflare ダッシュボード → **Storage & Databases** → **KV** → **Create a namespace** → 名前 `minogasan-usage`
-2. Worker の中 → **Settings** → **Bindings**（または Variables → KV Namespace Bindings）→ **Add** → **KV namespace**
+1. Cloudflare ダッシュボード左メニュー → **Storage & Databases** → **KV**（Workers KV）→ **Create instance**（表記により Create a namespace）→ 名前 `minogasan-usage`
+2. **Workers & Pages** → `minogasan-line-bot` を開く → 上部タブの **Bindings**（Metrics / Deployments / Bindings / Settings … と並ぶ。**Settings の中ではなく独立タブ**）
+   - 古い UI の場合は **Settings → Variables → KV Namespace Bindings**
+3. **Add binding** → **KV namespace**
    - Variable name: **`USAGE`**（コードがこの名前で参照する）
    - KV namespace: `minogasan-usage` を選択
-3. **Deploy**
+4. **Add binding**（デプロイまで入る）
 
 ### 2. コードを貼り直す
 
