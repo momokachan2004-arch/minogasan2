@@ -20,7 +20,7 @@
 </head>
 <body>
 <h1>見逃さん アイコン生成</h1>
-<p>下のプレビューを確認し、各「ダウンロード」を押して <code>icon-192-v2.png</code> / <code>icon-512-v2.png</code> / <code>icon-maskable-512-v2.png</code> を保存 → 「見逃さん」フォルダの同名ファイルに上書き。<br>※ アイコンを大きく変えたら、この <code>-v2</code> の数字を上げて manifest.webmanifest / sw.js / index.html の参照も揃えると、スマホで確実に更新される。</p>
+<p>下のプレビューを確認し、各「ダウンロード」を押して <code>icon-192-v2.png</code> / <code>icon-512-v2.png</code> / <code>icon-maskable-512-v2.png</code> を保存 → 「見逃さん」フォルダの同名ファイルに上書き。<br>※ アイコンを大きく変えたら、この <code>-v2</code> の数字を上げて manifest.webmanifest / sw.js / index.html の参照も揃えると、スマホで確実に更新される。<br>※ <code>line-oa-icon-1024.png</code> は LINE 公式アカウントのアイコン用。LINE Official Account Manager → 設定 → アカウント設定 → 基本設定 → プロフィール画像 にアップロード（円形に切り抜かれる）。</p>
 
 <div class="row" id="previews"></div>
 
@@ -141,6 +141,7 @@ const SIZES = [
   { size: 192, maskable: false, name: "icon-192-v2.png" },
   { size: 512, maskable: false, name: "icon-512-v2.png" },
   { size: 512, maskable: true,  name: "icon-maskable-512-v2.png" },
+  { size: 1024, maskable: false, name: "line-oa-icon-1024.png" }, // LINE公式アカウントのアイコン用（円形に切り抜かれる。640px以上推奨）
 ];
 
 async function build() {
