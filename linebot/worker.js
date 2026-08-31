@@ -1,35 +1,39 @@
-/* 見逃さん LINE bot — STEP 2: キャンペーン一覧を Flex Message で返す
+/* 見逃さん LINE bot — STEP 3: 利用開始日を KV に記録して「利用中」を返す
  *
  * Cloudflare Workers にダッシュボードから貼り付けてデプロイする。
- * 秘密情報はここには書かない。Cloudflare の Worker 設定 → Settings → Variables and Secrets に
- * 以下2つを「Secret」で登録する:
+ *
+ * ■ Secret（Settings → Variables and Secrets、種類 Secret）
  *   CHANNEL_ACCESS_TOKEN … LINE Developers Console → Messaging API → チャネルアクセストークン（長期）
  *   CHANNEL_SECRET        … LINE Developers Console → Basic settings → チャネルシークレット
  *
- * データソース:
- *   GitHub Pages の campaigns.js をそのまま fetch して解析する（アプリと単一ソース）。
- *   → git push でアプリを更新すれば bot 側も自動で最新になる。
- *   Workers は eval / new Function を使えないので、必要な配列リテラルだけを小さなパーサで読む。
+ * ■ KV バインド（STEP 3 で追加。Settings → Bindings → Add → KV namespace）
+ *   変数名: USAGE  （ネームスペースは新規作成でよい。例: minogasan-usage）
+ *   未バインドでも STEP 2（一覧）は動く。登録系コマンドだけ「準備中」を返す。
  *
- * 動作:
- *   GET  … 生存確認用に "OK" を返すだけ
- *   POST … LINE からの Webhook。署名検証 → イベント処理
- *     - follow（友だち追加）      … 使い方を返す
- *     - text「ヘルプ」            … 使い方を返す
- *     - text「キャンペーン」/「一覧」… 掲載中を締切が近い順に Flex カルーセルで返す
- *     - text カテゴリ名（動画 等） … そのカテゴリだけ
- *     - text「急ぎ」              … 締切が決まっているものだけ
- *     - それ以外のテキスト         … 使い方を案内
+ * ■ データソース
+ *   GitHub Pages の campaigns.js を実行時 fetch して解析（アプリと単一ソース）。
+ *   Workers は eval / new Function 不可のため、配列リテラルを自前パーサで読む。
+ *
+ * ■ KV に持つデータ
+ *   key:   "u:" + LINE userId
+ *   value: { started: { "<campaignId>": { d: "YYYY-MM-DD", s: "サービス名" }, ... }, updatedAt: "ISO" }
+ *   ・登録操作をするまで何も書かない。「データ削除」で key ごと消す。
  */
 
 const CAMPAIGNS_URL = "https://momokachan2004-arch.github.io/minogasan2/campaigns.js";
 const CATS = ["動画", "音楽", "雑誌", "フード", "買い物", "くらし", "ゲーム"];
 const CACHE_TTL_MS = 10 * 60 * 1000;
 
+const HELP = ["ヘルプ", "へるぷ", "help", "使い方", "つかいかた", "?", "？", "メニュー", "menu"];
+const LIST = ["キャンペーン", "きゃんぺーん", "一覧", "いちらん", "りすと", "list", "全部", "ぜんぶ", "お得", "おとく"];
+const URGENT = ["急ぎ", "いそぎ", "締切", "しめきり", "終了間近", "そろそろ"];
+const LISTUSAGE = ["利用中", "りようちゅう", "マイページ", "まいぺーじ", "登録済み"];
+const WIPE = ["データ削除", "でーたさくじょ", "全部削除", "ぜんぶさくじょ", "リセット", "りせっと"];
+
 export default {
   async fetch(request, env, ctx) {
     if (request.method === "GET") {
-      return new Response("minogasan LINE bot: OK (STEP 2)", { status: 200 });
+      return new Response("minogasan LINE bot: OK (STEP 3)", { status: 200 });
     }
     if (request.method !== "POST") {
       return new Response("Method Not Allowed", { status: 405 });
@@ -64,19 +68,13 @@ export default {
 async function handleEvents(events, env) {
   for (const event of events) {
     try {
+      const userId = event.source && event.source.userId;
       if (event.type === "follow") {
-        await reply(
-          event.replyToken,
-          [textMsg("友だち追加ありがとうございます！\n\n" + helpText())],
-          env
-        );
-      } else if (
-        event.type === "message" &&
-        event.message &&
-        event.message.type === "text"
-      ) {
-        const msgs = await handleText(event.message.text, env);
-        await reply(event.replyToken, msgs, env);
+        await reply(event.replyToken, [textMsg("友だち追加ありがとうございます！\n\n" + helpText())], env);
+      } else if (event.type === "postback") {
+        await reply(event.replyToken, await handlePostback(event, env), env);
+      } else if (event.type === "message" && event.message && event.message.type === "text") {
+        await reply(event.replyToken, await handleText(event.message.text, env, userId), env);
       }
     } catch (e) {
       console.log("handleEvent error", e && e.message);
@@ -84,68 +82,204 @@ async function handleEvents(events, env) {
   }
 }
 
-async function handleText(raw, env) {
+async function handleText(raw, env, userId) {
   const t = norm(raw);
 
-  const HELP = ["ヘルプ", "へるぷ", "help", "使い方", "つかいかた", "?", "？", "メニュー", "menu"];
-  const LIST = ["キャンペーン", "きゃんぺーん", "一覧", "いちらん", "りすと", "list", "全部", "ぜんぶ", "お得", "おとく"];
-  const URGENT = ["急ぎ", "いそぎ", "締切", "しめきり", "終了間近", "そろそろ"];
-
   if (HELP.includes(t)) return [textMsg(helpText())];
+  if (WIPE.includes(t)) return [wipeConfirmMsg()];
 
   let campaigns;
   try {
     campaigns = await getCampaigns();
   } catch (e) {
     console.log("getCampaigns failed", e && e.message);
-    return [textMsg("いま一覧を取得できませんでした。少し時間をおいて、もう一度「キャンペーン」と送ってください。")];
+    return [textMsg("いま処理できませんでした。少し時間をおいて、もう一度お試しください。")];
   }
 
-  // 期限切れ（残り日数 < 0）は除外
-  const active = campaigns
-    .map((c) => ({ ...c, _left: daysLeft(c.deadline) }))
-    .filter((c) => c._left == null || c._left >= 0);
+  if (LISTUSAGE.includes(t)) return listUsage(env, userId, campaigns);
 
-  let picked = null;
-  let label = "";
+  // 解約 X ／ X やめた ／ X 解約 ／ 削除 X
+  let m;
+  if ((m = t.match(/^(?:解約|かいやく|削除|さくじょ)\s+(.+)$/)) || (m = t.match(/^(.+?)\s*(?:を)?\s*(?:やめた|解約|かいやく|削除)$/))) {
+    return cancelUsage(env, userId, m[1], campaigns);
+  }
 
-  if (LIST.includes(t)) {
-    picked = active;
-    label = "掲載中のキャンペーン";
-  } else if (URGENT.includes(t)) {
-    picked = active.filter((c) => c._left != null);
-    label = "締切があるキャンペーン";
-  } else {
-    const cat = CATS.find((c) => norm(c) === t);
-    if (cat) {
-      picked = active.filter((c) => c.category === cat);
-      label = `「${cat}」のキャンペーン`;
+  // 登録: サービス名 + 日付（「今日から」「3日前」「8/20」など）
+  const ps = parseStart(t);
+  if (ps) {
+    const hits = matchCampaigns(ps.service, campaigns);
+    if (hits.length === 1) return doRegister(env, userId, hits[0], ps.iso);
+    if (hits.length === 0) {
+      return [textMsg(`「${ps.service.trim()}」に一致するキャンペーンが見つかりませんでした。\n「一覧」で掲載中のサービス名を確認できます。`)];
     }
+    return [textMsg("候補が複数あります:\n" + hits.slice(0, 8).map((c) => "・" + c.service).join("\n") + "\nもう少し正確なサービス名で送ってください。")];
   }
 
-  if (!picked) {
-    return [textMsg("『" + raw.trim() + "』はコマンドとして分かりませんでした。\n\n" + helpText())];
+  // STEP 2: 一覧系
+  if (LIST.includes(t)) return listFlex(campaigns, "掲載中のキャンペーン", () => true);
+  if (URGENT.includes(t)) return listFlex(campaigns, "締切があるキャンペーン", (c) => daysLeft(c.deadline) != null);
+  const cat = CATS.find((c) => norm(c) === t);
+  if (cat) return listFlex(campaigns, `「${cat}」のキャンペーン`, (c) => c.category === cat);
+
+  // サービス名だけ送られた → 開始日を選ぶボタンを出す
+  const hits = matchCampaigns(t, campaigns);
+  if (hits.length === 1) return [datePickMsg(hits[0])];
+  if (hits.length > 1 && hits.length <= 6) {
+    return [textMsg("どのサービス？ 正確な名前で送ってください:\n" + hits.map((c) => "・" + c.service).join("\n"))];
   }
-  if (picked.length === 0) {
-    return [textMsg(`${label}は今のところありません。\n「キャンペーン」で全件を表示できます。`)];
+
+  return [textMsg("『" + raw.trim() + "』はコマンドとして分かりませんでした。\n\n" + helpText())];
+}
+
+async function handlePostback(event, env) {
+  const userId = event.source && event.source.userId;
+  const p = new URLSearchParams(event.postback && event.postback.data ? event.postback.data : "");
+  const action = p.get("action");
+
+  if (action === "wipe") {
+    if (p.get("confirm") === "yes") {
+      if (env.USAGE && userId) await env.USAGE.delete("u:" + userId);
+      return [textMsg("あなたの利用記録をすべて削除しました。")];
+    }
+    return [textMsg("削除をキャンセルしました。")];
   }
 
-  // 締切が近い順 → 通年は後ろ（掲載日が新しい順）
-  picked.sort((a, b) => {
-    const ap = a._left == null;
-    const bp = b._left == null;
-    if (ap !== bp) return ap ? 1 : -1;
-    if (!ap) return a._left - b._left;
-    return String(b.addedAt || "").localeCompare(String(a.addedAt || ""));
-  });
+  if (!env.USAGE) return [textMsg("記録機能はまだ準備中です（KV 未設定）。")];
+  if (!userId) return [textMsg("ユーザーID が取得できませんでした。")];
 
-  const shown = picked.slice(0, 12); // Flex カルーセルは最大12枚
-  const head =
-    `${label} ${picked.length}件` +
-    (picked.length > shown.length ? `（近い順に${shown.length}件表示）` : "（近い順）") +
-    `\nカテゴリで絞る: ${CATS.join(" / ")}`;
+  if (action === "start") {
+    const cid = p.get("cid");
+    const ago = parseInt(p.get("ago") || "0", 10);
+    let campaigns;
+    try {
+      campaigns = await getCampaigns();
+    } catch {
+      return [textMsg("いま処理できませんでした。少し後でお試しください。")];
+    }
+    const c = campaigns.find((x) => String(x.id) === String(cid));
+    if (!c) return [textMsg("対象のキャンペーンが見つかりませんでした。")];
+    return doRegister(env, userId, c, isoDaysAgo(isFinite(ago) ? ago : 0));
+  }
 
-  return [textMsg(head), flexMsg(label, shown)];
+  if (action === "del") {
+    const cid = p.get("cid");
+    const u = await loadUser(env, userId);
+    if (u.started[cid]) {
+      const rec = u.started[cid];
+      const s = (typeof rec === "object" && rec.s) || "ID " + cid;
+      delete u.started[cid];
+      await saveUser(env, userId, u);
+      return [textMsg(`「${s}」の登録を削除しました。`)];
+    }
+    return [textMsg("その登録は見つかりませんでした。")];
+  }
+
+  return [textMsg("操作を認識できませんでした。「ヘルプ」で使い方を確認できます。")];
+}
+
+// ============================================================================
+// 登録・一覧・削除
+// ============================================================================
+
+async function doRegister(env, userId, c, iso) {
+  if (!env.USAGE) {
+    return [textMsg("記録機能はまだ準備中です。\nCloudflare で KV ネームスペースを作り、変数名 USAGE で Worker にバインドしてください。")];
+  }
+  if (!userId) return [textMsg("ユーザーID が取得できませんでした。友だち追加し直すと直ることがあります。")];
+  const u = await loadUser(env, userId);
+  u.started[String(c.id)] = { d: iso, s: c.service };
+  await saveUser(env, userId, u);
+  return [textMsg(startedConfirm(c, iso))];
+}
+
+function startedConfirm(c, d) {
+  if (c.freeDays) {
+    const end = addDays(d, c.freeDays);
+    const n = daysLeft(end);
+    const tail =
+      n >= 0
+        ? `無料期間は ${end} まで（あと${n}日）。`
+        : `無料期間（${c.freeDays}日）はすでに過ぎている計算です（${end}）。`;
+    return `「${c.service}」を開始日 ${d} で登録しました。\n${tail}\n「利用中」でいつでも確認できます。`;
+  }
+  return `「${c.service}」を開始日 ${d} で登録しました。\n「利用中」で確認できます。`;
+}
+
+async function listUsage(env, userId, campaigns) {
+  if (!env.USAGE) return [textMsg("記録機能はまだ準備中です（KV 未設定）。")];
+  if (!userId) return [textMsg("ユーザーID が取得できませんでした。")];
+
+  const u = await loadUser(env, userId);
+  const ids = Object.keys(u.started);
+  if (!ids.length) {
+    return [textMsg("まだ登録がありません。\n使っているサービス名を送ると登録できます（例:「Spotify」→ 開始日ボタンが出ます）。")];
+  }
+
+  const rows = ids
+    .map((id) => {
+      const rec = u.started[id];
+      const d = typeof rec === "string" ? rec : rec.d;
+      const snap = typeof rec === "object" && rec.s ? rec.s : null;
+      const c = campaigns.find((x) => String(x.id) === String(id));
+      const service = (c && c.service) || snap || "ID " + id;
+      const icon = (c && c.icon) || "🎫";
+      const freeDays = c ? c.freeDays : null;
+      let end = null;
+      let n = null;
+      if (freeDays) {
+        end = addDays(d, freeDays);
+        n = daysLeft(end);
+      }
+      return { id, d, service, icon, freeDays, end, n, known: !!c };
+    })
+    .sort((a, b) => {
+      if (a.n == null && b.n == null) return 0;
+      if (a.n == null) return 1;
+      if (b.n == null) return -1;
+      return a.n - b.n;
+    });
+
+  const shown = rows.slice(0, 12);
+  return [
+    textMsg(`利用中の登録 ${rows.length}件（無料期間が近い順）`),
+    {
+      type: "flex",
+      altText: `利用中の登録（${rows.length}件）`,
+      contents: { type: "carousel", contents: shown.map(usageBubble) },
+    },
+  ];
+}
+
+async function cancelUsage(env, userId, query, campaigns) {
+  if (!env.USAGE) return [textMsg("記録機能はまだ準備中です（KV 未設定）。")];
+  if (!userId) return [textMsg("ユーザーID が取得できませんでした。")];
+
+  const u = await loadUser(env, userId);
+  const ids = Object.keys(u.started);
+  if (!ids.length) return [textMsg("登録がありません。")];
+
+  const q = norm(query);
+  const cand = ids
+    .map((id) => {
+      const rec = u.started[id];
+      const snap = typeof rec === "object" && rec.s ? rec.s : null;
+      const c = campaigns.find((x) => String(x.id) === String(id));
+      return { id, s: (c && c.service) || snap || "ID " + id };
+    })
+    .filter((x) => {
+      const ns = norm(x.s);
+      return ns === q || ns.includes(q) || q.includes(ns);
+    });
+
+  if (cand.length === 0) {
+    return [textMsg(`「${query.trim()}」に一致する登録が見つかりませんでした。「利用中」で一覧を確認できます。`)];
+  }
+  if (cand.length > 1) {
+    return [textMsg("複数一致しました。正確な名前で送ってください:\n" + cand.map((c) => "・" + c.s).join("\n"))];
+  }
+  delete u.started[cand[0].id];
+  await saveUser(env, userId, u);
+  return [textMsg(`「${cand[0].s}」の登録を削除しました。`)];
 }
 
 // ============================================================================
@@ -154,6 +288,59 @@ async function handleText(raw, env) {
 
 function textMsg(text) {
   return { type: "text", text: String(text).slice(0, 4900) };
+}
+
+function qr(label, data) {
+  return { type: "action", action: { type: "postback", label, data, displayText: label } };
+}
+
+function wipeConfirmMsg() {
+  return {
+    type: "text",
+    text: "あなたの利用記録をすべて削除します。よろしいですか？",
+    quickReply: {
+      items: [qr("はい、削除する", "action=wipe&confirm=yes"), qr("キャンセル", "action=wipe&confirm=no")],
+    },
+  };
+}
+
+function datePickMsg(c) {
+  return {
+    type: "text",
+    text: `「${c.service}」をいつから使ってる？`,
+    quickReply: {
+      items: [
+        qr("今日", `action=start&cid=${c.id}&ago=0`),
+        qr("昨日", `action=start&cid=${c.id}&ago=1`),
+        qr("3日前", `action=start&cid=${c.id}&ago=3`),
+        qr("1週間前", `action=start&cid=${c.id}&ago=7`),
+        qr("2週間前", `action=start&cid=${c.id}&ago=14`),
+        qr("1か月前", `action=start&cid=${c.id}&ago=30`),
+      ],
+    },
+  };
+}
+
+function listFlex(campaigns, label, filterFn) {
+  const active = campaigns
+    .map((c) => ({ ...c, _left: daysLeft(c.deadline) }))
+    .filter((c) => (c._left == null || c._left >= 0) && filterFn(c));
+  if (!active.length) {
+    return [textMsg(`${label}は今のところありません。\n「キャンペーン」で全件を表示できます。`)];
+  }
+  active.sort((a, b) => {
+    const ap = a._left == null;
+    const bp = b._left == null;
+    if (ap !== bp) return ap ? 1 : -1;
+    if (!ap) return a._left - b._left;
+    return String(b.addedAt || "").localeCompare(String(a.addedAt || ""));
+  });
+  const shown = active.slice(0, 12);
+  const head =
+    `${label} ${active.length}件` +
+    (active.length > shown.length ? `（近い順に${shown.length}件表示）` : "（近い順）") +
+    `\nカテゴリで絞る: ${CATS.join(" / ")}`;
+  return [textMsg(head), flexMsg(label, shown)];
 }
 
 function flexMsg(label, list) {
@@ -224,18 +411,75 @@ function bubble(c) {
   return bub;
 }
 
+function usageBubble(r) {
+  let endText;
+  let endColor;
+  if (r.freeDays == null) {
+    endText = r.known ? "無料期間なし（開始日のみ記録）" : "掲載終了・開始日のみ記録";
+    endColor = "#888888";
+  } else if (r.n < 0) {
+    endText = `無料期間は終了（${r.end}）`;
+    endColor = "#D32F2F";
+  } else if (r.n === 0) {
+    endText = `本日 無料期間終了（${r.end}）`;
+    endColor = "#D32F2F";
+  } else if (r.n <= 3) {
+    endText = `${r.end} まで無料（あと${r.n}日）`;
+    endColor = "#D32F2F";
+  } else if (r.n <= 7) {
+    endText = `${r.end} まで無料（あと${r.n}日）`;
+    endColor = "#F57C00";
+  } else {
+    endText = `${r.end} まで無料（あと${r.n}日）`;
+    endColor = "#2E7D32";
+  }
+
+  return {
+    type: "bubble",
+    size: "kilo",
+    body: {
+      type: "box",
+      layout: "vertical",
+      spacing: "sm",
+      contents: [
+        { type: "text", text: `${r.icon} ${r.service}`, weight: "bold", size: "md", wrap: true },
+        { type: "text", text: `開始日 ${r.d}`, size: "xs", color: "#888888", wrap: true },
+        { type: "text", text: endText, size: "xs", color: endColor, wrap: true },
+      ],
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      contents: [
+        {
+          type: "button",
+          style: "secondary",
+          height: "sm",
+          action: { type: "postback", label: "解約した / 消す", data: `action=del&cid=${r.id}`, displayText: `${r.service} を解約` },
+        },
+      ],
+    },
+  };
+}
+
 function helpText() {
   return [
     "見逃さん bot の使い方",
     "",
-    "「キャンペーン」… 掲載中の一覧（締切が近い順）",
+    "▼ キャンペーンを見る",
+    "「キャンペーン」… 掲載中を締切が近い順に",
     "「急ぎ」… 締切が決まっているものだけ",
-    "カテゴリ名… そのカテゴリだけ表示",
-    "　" + CATS.join(" / "),
-    "「ヘルプ」… この案内",
+    "カテゴリ名… " + CATS.join(" / "),
     "",
-    "各カードの「詳細を見る」で公式ページを確認できます。",
-    "掲載情報は目安です。最新の条件は必ず公式サイトでご確認ください。",
+    "▼ 使っているサービスを登録（解約リマインド用）",
+    "サービス名を送る（例:「Spotify」）→ 開始日ボタンで選ぶ",
+    "「Spotify 今日から」「U-NEXT 3日前」「dマガジン 8/20」でも登録可",
+    "「利用中」… 登録内容と無料期間の残りを表示",
+    "「解約 Spotify」… その登録を削除",
+    "「データ削除」… 自分の記録をすべて消す",
+    "",
+    "登録内容はリマインドのためサーバーに保存されます（「データ削除」でいつでも消去可）。",
+    "掲載情報は目安です。条件は必ず公式サイトでご確認ください。",
   ].join("\n");
 }
 
@@ -419,6 +663,28 @@ class LiteralParser {
 }
 
 // ============================================================================
+// KV
+// ============================================================================
+
+async function loadUser(env, userId) {
+  if (!env.USAGE || !userId) return { started: {} };
+  const raw = await env.USAGE.get("u:" + userId);
+  if (!raw) return { started: {} };
+  try {
+    const o = JSON.parse(raw);
+    o.started = o.started || {};
+    return o;
+  } catch {
+    return { started: {} };
+  }
+}
+
+async function saveUser(env, userId, data) {
+  data.updatedAt = new Date().toISOString();
+  await env.USAGE.put("u:" + userId, JSON.stringify(data));
+}
+
+// ============================================================================
 // 小物
 // ============================================================================
 
@@ -430,15 +696,65 @@ function norm(t) {
     .toLowerCase();
 }
 
-// "YYYY-MM-DD" と JST の今日から残り日数。deadline が無ければ null。
-function daysLeft(deadline) {
-  if (!deadline) return null;
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(deadline).trim());
+// 「サービス名 + 日付表現」を { service, iso } に。該当しなければ null。
+function parseStart(t) {
+  let m;
+  if ((m = t.match(/^(.+?)\s*(?:を)?\s*(?:今日|きょう|本日)(?:から)?$/))) return { service: m[1], iso: isoDaysAgo(0) };
+  if ((m = t.match(/^(.+?)\s*(?:を)?\s*(?:昨日|きのう)(?:から)?$/))) return { service: m[1], iso: isoDaysAgo(1) };
+  if ((m = t.match(/^(.+?)\s*(\d{1,3})\s*日前(?:から)?$/))) return { service: m[1], iso: isoDaysAgo(+m[2]) };
+  if ((m = t.match(/^(.+?)\s*(\d{1,2})\s*(?:週間|週)前(?:から)?$/))) return { service: m[1], iso: isoDaysAgo(+m[2] * 7) };
+  if ((m = t.match(/^(.+?)\s*(\d{1,2})\s*(?:か月|ヶ月|カ月|かげつ)前(?:から)?$/))) return { service: m[1], iso: isoDaysAgo(+m[2] * 30) };
+  if ((m = t.match(/^(.+?)\s*(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:から)?$/))) return { service: m[1], iso: ymd(+m[2], +m[3], +m[4]) };
+  if ((m = t.match(/^(.+?)\s*(\d{1,2})[/月](\d{1,2})日?(?:から)?$/))) {
+    const now = new Date(Date.now() + 9 * 3600 * 1000);
+    let y = now.getUTCFullYear();
+    if (ymd(y, +m[2], +m[3]) > now.toISOString().slice(0, 10)) y -= 1; // 未来日付なら前年とみなす
+    return { service: m[1], iso: ymd(y, +m[2], +m[3]) };
+  }
+  return null;
+}
+
+function ymd(y, mo, d) {
+  const p = (x) => String(x).padStart(2, "0");
+  return `${y}-${p(mo)}-${p(d)}`;
+}
+
+// JST の「n 日前」を YYYY-MM-DD で
+function isoDaysAgo(n) {
+  const d = new Date(Date.now() + 9 * 3600 * 1000);
+  d.setUTCDate(d.getUTCDate() - (isFinite(n) ? n : 0));
+  return d.toISOString().slice(0, 10);
+}
+
+// YYYY-MM-DD に n 日足す
+function addDays(iso, n) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return iso;
+  const t = Date.UTC(+m[1], +m[2] - 1, +m[3]) + n * 86400000;
+  return new Date(t).toISOString().slice(0, 10);
+}
+
+// "YYYY-MM-DD" と JST の今日から残り日数。無ければ null。
+function daysLeft(dateStr) {
+  if (!dateStr) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateStr).trim());
   if (!m) return null;
   const jst = new Date(Date.now() + 9 * 3600 * 1000);
   const today = Date.UTC(jst.getUTCFullYear(), jst.getUTCMonth(), jst.getUTCDate());
-  const dl = Date.UTC(+m[1], +m[2] - 1, +m[3]);
-  return Math.round((dl - today) / 86400000);
+  const target = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+  return Math.round((target - today) / 86400000);
+}
+
+// サービス名クエリに一致するキャンペーン（完全一致優先、なければ部分一致）
+function matchCampaigns(query, campaigns) {
+  const q = norm(query);
+  if (!q) return [];
+  const exact = campaigns.filter((c) => norm(c.service) === q);
+  if (exact.length) return exact;
+  return campaigns.filter((c) => {
+    const s = norm(c.service);
+    return s.includes(q) || q.includes(s);
+  });
 }
 
 async function reply(replyToken, messages, env) {

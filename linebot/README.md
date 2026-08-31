@@ -70,10 +70,7 @@ Messaging API タブの QR から自分の LINE で友だち追加 → 適当に
 
 ---
 
-## STEP 2: キャンペーン一覧を返す（実装済み・要デプロイ）
-
-`worker.js` を STEP 2 版に差し替えた。**Cloudflare のエディタに貼り直して Deploy** すれば反映される
-（シークレットの再設定は不要）。
+## STEP 2: キャンペーン一覧を返す（実装済み）
 
 ### データの持ち方
 
@@ -105,9 +102,57 @@ Worker が実行時に **GitHub Pages の `campaigns.js` をそのまま fetch**
 
 ---
 
+## STEP 3: 利用開始日を記録して「利用中」を返す（実装済み・要デプロイ＋KV設定）
+
+`worker.js` を STEP 3 版に差し替えた。**まず KV をバインドしてから、エディタに貼り直して Deploy**。
+シークレットの再設定は不要。KV 未設定でも STEP 2（一覧）は動く。
+
+### 1. KV ネームスペースを作ってバインド
+
+1. Cloudflare ダッシュボード → **Storage & Databases** → **KV** → **Create a namespace** → 名前 `minogasan-usage`
+2. Worker の中 → **Settings** → **Bindings**（または Variables → KV Namespace Bindings）→ **Add** → **KV namespace**
+   - Variable name: **`USAGE`**（コードがこの名前で参照する）
+   - KV namespace: `minogasan-usage` を選択
+3. **Deploy**
+
+### 2. コードを貼り直す
+
+エディタの中身を全消し → [`worker.js`](worker.js) を貼る → **Deploy**。
+
+### KV に持つデータ
+
+```
+key:   u:<LINEのuserId>
+value: { started: { "<campaignId>": { d: "YYYY-MM-DD", s: "サービス名" }, ... }, updatedAt: "ISO" }
+```
+
+- 登録操作をするまで KV には何も書かない。
+- サービス名スナップショット `s` も持つので、後で campaigns.js から消えても「利用中」に名前が残る。
+- 無料枠: 読み 10万/日・書き 1000/日。個人利用では当たらない。
+
+### 追加コマンド（すべて返信メッセージ＝無料）
+
+| 送る言葉 | 動作 |
+|---|---|
+| サービス名だけ（例 `Spotify`） | 「今日 / 昨日 / 3日前 / 1週間前 / 2週間前 / 1か月前」のクイックリプライを出す → タップで登録 |
+| `Spotify 今日から` / `U-NEXT 3日前` / `dマガジン 8/20` / `... 2026-08-01` | その日付で直接登録 |
+| `利用中` / `マイページ` | 登録内容を「無料期間の終了日・残り日数」付きで Flex 表示（各カードに解約ボタン） |
+| `解約 Spotify` / `Spotify やめた` | その登録を削除 |
+| `データ削除` | 確認クイックリプライ → 自分の記録を key ごと削除 |
+
+- 開始日 + `campaign.freeDays` から個人の無料期間終了日を計算。`freeDays` が無い還元系は開始日のみ記録。
+- サービス名は完全一致優先→部分一致。複数ヒット時は候補を返して聞き返す。
+- postback（クイックリプライ／解約ボタン）は `event.type === "postback"` で処理。`data` は `action=start&cid=..&ago=..` 等。
+
+### デプロイ後の確認
+
+「Spotify」→ 日付ボタン → 「今日」タップ → 登録完了メッセージ → 「利用中」で一覧に出れば STEP 3 完了。
+`記録機能はまだ準備中です（KV 未設定）` が返る場合はバインドの Variable name が `USAGE` か確認。
+
+---
+
 ## この先（未着手）
 
-- STEP 3: 「サービス名 今日から」で利用開始日を KV に記録
 - STEP 4: Cron Trigger で「終了3日前」プッシュ（ここから push 課金対象。リマインドだけなら無料枠 200/月 に収まる）
 - STEP 5: リッチメニュー＋使い方＋プライバシーポリシー（サーバーがユーザーデータを持つので「端末内だけ」の説明は不可に）
 - STEP 6: 友だちに配ってオフィシャルアカウントマネージャーの分析を見る
