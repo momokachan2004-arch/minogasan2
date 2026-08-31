@@ -369,4 +369,13 @@ window.CAMPAIGNS = [
     tags: ["kosodate", "senior"],
     lastChecked: "2026-08-30", source: "運営確認",
   },
+  {
+    id: 3190, service: "子ども英語教室 Lepton", icon: "🔤", category: "くらし",
+    title: "入会金＋初月月謝 0円（秋の入会キャンペーン）",
+    detail: "2026/9/1〜10/31に対象教室へ新規入会しレッスン開始が条件。月謝無料は9月か10月分、テキスト代は実費。9月入会ならAmazonギフト券1,000円も（Eメール・11月中旬頃、当月退会は対象外）。転籍者・1年未満の再入会者は対象外、一部実施しない教室あり",
+    url: "https://www.lepton.co.jp/campaign",
+    deadline: "2026-10-31", freeDays: null, hasCancellation: false, addedAt: "2026-08-31",
+    tags: ["kosodate"],
+    lastChecked: "2026-08-31", source: "公式",
+  },
 ];
