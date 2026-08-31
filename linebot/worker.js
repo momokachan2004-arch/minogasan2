@@ -1,6 +1,14 @@
-/* 見逃さん LINE bot — STEP 4: 無料期間の終了リマインドをプッシュ
+/* 見逃さん LINE bot — STEP 5: プライバシーポリシー配信 ＋ リッチメニュー対応
  *
  * Cloudflare Workers にダッシュボードから貼り付けてデプロイする。
+ *
+ * ■ STEP 5 で増えたもの
+ *   GET /privacy … プライバシーポリシーの HTML を返す（PRIVACY_HTML）
+ *   text「プライバシー」 … その URL を返す
+ *   unfollow イベント（ブロック／友だち削除）… 該当ユーザーの KV レコードを自動削除
+ *   リッチメニュー自体は LINE Official Account Manager の GUI で作成する（本コードは変更不要）。
+ *   各ボタンに「テキスト」アクションで キャンペーン / 急ぎ / 利用中 / ヘルプ / データ削除 を、
+ *   プライバシーのボタンだけ「リンク」アクションで /privacy を割り当てる。画像は richmenu-maker.html。
  *
  * ■ Secret（Settings → Variables and Secrets、種類 Secret）
  *   CHANNEL_ACCESS_TOKEN … LINE Developers Console → Messaging API → チャネルアクセストークン（長期）
@@ -27,6 +35,8 @@
  */
 
 const CAMPAIGNS_URL = "https://momokachan2004-arch.github.io/minogasan2/campaigns.js";
+const BOT_URL = "https://minogasan-line-bot.momokachan2004.workers.dev";
+const PRIVACY_URL = BOT_URL + "/privacy";
 const CATS = ["動画", "音楽", "雑誌", "フード", "買い物", "くらし", "ゲーム"];
 const CACHE_TTL_MS = 10 * 60 * 1000;
 
@@ -35,6 +45,7 @@ const LIST = ["キャンペーン", "きゃんぺーん", "一覧", "いちら�
 const URGENT = ["急ぎ", "いそぎ", "締切", "しめきり", "終了間近", "そろそろ"];
 const LISTUSAGE = ["利用中", "りようちゅう", "マイページ", "まいぺーじ", "登録済み"];
 const WIPE = ["データ削除", "でーたさくじょ", "全部削除", "ぜんぶさくじょ", "リセット", "りせっと"];
+const PRIVACY = ["プライバシー", "ぷらいばしー", "privacy", "プライバシーポリシー", "個人情報"];
 
 export default {
   // Cron Trigger（1日1回）。無料期間の「終了3日前」と「当日」にプッシュ通知。
@@ -44,7 +55,14 @@ export default {
 
   async fetch(request, env, ctx) {
     if (request.method === "GET") {
-      return new Response("minogasan LINE bot: OK (STEP 4)", { status: 200 });
+      const path = new URL(request.url).pathname;
+      if (path === "/privacy") {
+        return new Response(PRIVACY_HTML, {
+          status: 200,
+          headers: { "content-type": "text/html; charset=utf-8" },
+        });
+      }
+      return new Response("minogasan LINE bot: OK (STEP 5)", { status: 200 });
     }
     if (request.method !== "POST") {
       return new Response("Method Not Allowed", { status: 405 });
@@ -82,6 +100,15 @@ async function handleEvents(events, env) {
       const userId = event.source && event.source.userId;
       if (event.type === "follow") {
         await reply(event.replyToken, [textMsg("友だち追加ありがとうございます！\n\n" + helpText())], env);
+      } else if (event.type === "unfollow") {
+        // ブロック／友だち解除。返信はできない。記録を削除する。
+        if (env.USAGE && userId) {
+          try {
+            await env.USAGE.delete("u:" + userId);
+          } catch (e) {
+            console.log("unfollow delete failed", e && e.message);
+          }
+        }
       } else if (event.type === "postback") {
         await reply(event.replyToken, await handlePostback(event, env), env);
       } else if (event.type === "message" && event.message && event.message.type === "text") {
@@ -97,6 +124,9 @@ async function handleText(raw, env, userId) {
   const t = norm(raw);
 
   if (HELP.includes(t)) return [textMsg(helpText())];
+  if (PRIVACY.includes(t)) {
+    return [textMsg("プライバシーポリシー（保存するデータ・削除方法）:\n" + PRIVACY_URL + "\n\n記録を消すには「データ削除」。")];
+  }
   if (WIPE.includes(t)) return [wipeConfirmMsg()];
 
   let campaigns;
@@ -491,9 +521,86 @@ function helpText() {
     "",
     "無料期間の「終了3日前」と「当日」に自動でお知らせします。",
     "登録内容はリマインドのためサーバーに保存されます（「データ削除」でいつでも消去可）。",
+    "「プライバシー」… 保存するデータと削除方法の説明",
     "掲載情報は目安です。条件は必ず公式サイトでご確認ください。",
   ].join("\n");
 }
+
+// ============================================================================
+// プライバシーポリシー（GET /privacy で配信）
+// ============================================================================
+
+const PRIVACY_HTML = `<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>見逃さん LINE bot プライバシーポリシー</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    line-height: 1.8; margin: 0; padding: 24px 18px 64px; max-width: 720px; margin-inline: auto;
+    background: #F6F1E4; color: #23302B; }
+  @media (prefers-color-scheme: dark) { body { background: #1b241f; color: #e7e3d5; } a { color: #7fd3b4; } }
+  h1 { font-size: 1.35rem; border-bottom: 3px solid #2E7D5B; padding-bottom: 8px; }
+  h2 { font-size: 1.05rem; margin-top: 2em; color: #2E7D5B; }
+  ul { padding-left: 1.2em; }
+  li { margin: 4px 0; }
+  .meta { font-size: .85rem; opacity: .7; }
+  code { background: rgba(127,127,127,.18); padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<h1>見逃さん LINE bot プライバシーポリシー</h1>
+<p class="meta">最終更新: 2026-08-31</p>
+
+<p>「見逃さん LINE bot」（以下、本サービス）は、サブスクリプションやキャンペーンの無料期間の終了を
+見逃さないためのリマインドを提供する個人運営のサービスです。本ポリシーは、本サービスが取り扱う情報について説明します。</p>
+
+<h2>1. 取得・保存する情報</h2>
+<ul>
+  <li><strong>LINEユーザーID</strong>（本アカウント内で割り当てられる識別子）。リマインドの送信先を特定するために使います。</li>
+  <li><strong>あなたが登録したサービスの利用情報</strong>: キャンペーンの識別子、サービス名、あなたが選んだ「利用開始日」、送信済みリマインドの記録。</li>
+</ul>
+<p>これらは、あなたが「利用中サービスの登録」を行ったときにのみ保存されます。トークに送信した文章そのものや、
+LINEのプロフィール情報・友だちリスト・支払い情報などは取得しません。</p>
+
+<h2>2. 利用目的</h2>
+<ul>
+  <li>「利用中」の一覧表示</li>
+  <li>無料期間の「終了3日前」「当日」の通知</li>
+</ul>
+<p>広告配信や第三者への提供・販売は行いません。</p>
+
+<h2>3. 保存場所</h2>
+<p>情報は Cloudflare, Inc. のキー・バリューストレージ（Workers KV）に保存されます。
+サーバーは日本国外に所在する場合があります。通信はすべて暗号化（HTTPS）されます。</p>
+
+<h2>4. 保存期間・削除</h2>
+<ul>
+  <li>トークで「<code>解約 サービス名</code>」を送ると、その登録を削除します。</li>
+  <li>トークで「<code>データ削除</code>」を送ると、あなたの記録をすべて削除します。</li>
+  <li>本アカウントをブロック／友だち削除すると、あなたの記録は自動的に削除されます。</li>
+</ul>
+
+<h2>5. 第三者サービス</h2>
+<ul>
+  <li><strong>LINE（LINEヤフー株式会社）</strong>: メッセージの送受信に利用します。LINEのプライバシーポリシーが別途適用されます。</li>
+  <li><strong>Cloudflare, Inc.</strong>: 本サービスの実行およびデータ保存に利用します。</li>
+</ul>
+
+<h2>6. 免責</h2>
+<p>掲載しているキャンペーン情報は目安です。最新かつ正確な条件は各サービスの公式サイトでご確認ください。
+情報の誤り・リマインドの不達などにより生じた損害について、運営者は責任を負いかねます。</p>
+
+<h2>7. 改定</h2>
+<p>本ポリシーは予告なく改定されることがあります。重要な変更がある場合はトークでお知らせします。</p>
+
+<h2>8. お問い合わせ</h2>
+<p>本アカウントのトークにて「ヘルプ」または「プライバシー」とお送りください。</p>
+</body>
+</html>`;
 
 // ============================================================================
 // リマインド（Cron Trigger から呼ばれる）
