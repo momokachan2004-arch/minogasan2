@@ -37,7 +37,7 @@
 const CAMPAIGNS_URL = "https://momokachan2004-arch.github.io/minogasan2/campaigns.js";
 const BOT_URL = "https://minogasan-line-bot.momokachan2004.workers.dev";
 const PRIVACY_URL = BOT_URL + "/privacy";
-const CATS = ["動画", "音楽", "雑誌", "フード", "買い物", "くらし", "ゲーム"];
+const CATS = ["動画", "音楽", "雑誌", "フード", "買い物", "くらし", "ゲーム", "金融・通信"];
 const CACHE_TTL_MS = 10 * 60 * 1000;
 
 const HELP = ["ヘルプ", "へるぷ", "help", "使い方", "つかいかた", "?", "？", "メニュー", "menu"];

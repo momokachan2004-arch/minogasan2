@@ -54,7 +54,7 @@ window.PREFECTURES = [
   "福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県",
 ];
 
-window.CATEGORIES = ["すべて", "動画", "音楽", "雑誌", "フード", "買い物", "くらし", "ゲーム"];
+window.CATEGORIES = ["すべて", "動画", "音楽", "雑誌", "フード", "買い物", "くらし", "ゲーム", "金融・通信"];
 
 // 状況・関心タグ（初期ラインナップ）。id を campaign.tags で参照する。
 window.SITUATION_TAGS = [
@@ -369,6 +369,26 @@ window.CAMPAIGNS = [
     deadline: "2026-10-31", freeDays: null, hasCancellation: false, addedAt: "2026-08-31",
     tags: ["kosodate"],
     lastChecked: "2026-08-31", source: "公式",
+  },
+
+  /* ============ 金融・通信（新規入会ポイント系。無料トライアルではなく「入会/申込の締切」型）============
+     2026-09-25 公式ページで確認。「楽天マジ得フェスティバル」：カード＋モバイルで最大 3万ポイント。 */
+  {
+    // 期間限定ポイントを含む。付与条件の詳細は公式の各キャンペーンページを要確認。
+    id: 3220, service: "楽天カード", icon: "💳", category: "金融・通信",
+    title: "新規入会＋1回利用で 10,000ポイント", detail: "2026/9/18 10:00〜9/28 10:00 の新規入会が対象（進呈条件あり・期間限定ポイントを含む）。楽天モバイルの20,000ポイントと合わせて最大30,000ポイント",
+    url: "https://www.rakuten-card.co.jp/campaign/",
+    deadline: "2026-09-28", freeDays: null, hasCancellation: false, addedAt: "2026-09-25",
+    lastChecked: "2026-09-25", source: "公式",
+  },
+  {
+    // 公式ページで確認できたのは「20,000ポイント／9/18〜／楽天カード会員が初めて申込／期間限定ポイントなど条件あり」。
+    // 終了日 10/5 10:00 は報道（poitan.jp）の記載。公式の終了日を確認できたら source を「公式」に。
+    id: 3221, service: "楽天モバイル", icon: "📱", category: "金融・通信",
+    title: "初めての申込で 20,000ポイント（楽天カード会員）", detail: "楽天カード会員が楽天モバイルに初めて申し込むと対象。Web申込は2026/9/18〜10/5 10:00（店舗は10/4まで）。期間限定ポイントなど条件あり",
+    url: "https://network.mobile.rakuten.co.jp/campaign/",
+    deadline: "2026-10-05", freeDays: null, hasCancellation: false, addedAt: "2026-09-25",
+    lastChecked: "2026-09-25", source: "公式（終了日は報道）",
   },
 
   /* ============ 地域限定（areas あり）：PayPay「自治体キャンペーン」公式お知らせ 2026-08-31 で確認 ============

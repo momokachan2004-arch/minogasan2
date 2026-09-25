@@ -14,6 +14,8 @@
     { "name": "PR TIMES『半額』",           "url": "https://prtimes.jp/topics/keywords/%E5%8D%8A%E9%A1%8D" },
     { "name": "PR TIMES『初回無料』",       "url": "https://prtimes.jp/topics/keywords/%E5%88%9D%E5%9B%9E%E7%84%A1%E6%96%99" },
     { "name": "PR TIMES『無料体験』",       "url": "https://prtimes.jp/topics/keywords/%E7%84%A1%E6%96%99%E4%BD%93%E9%A8%93" },
+    { "_note": "地域限定(areas)用。PayPay は毎月『地方自治体とPayPayが連携して取り組むキャンペーン…◯月以降に実施する施策が決定！』を出す。新しい月次お知らせの見出しが出たら中身を開いて campaigns.js に areas 付きで追加する。" },
+    { "name": "PayPay お知らせ『キャンペーン・特典』（自治体キャンペーンの月次発表を含む）", "url": "https://paypay.ne.jp/notice/campaign/" },
     { "_note": "ここから下は『値上げアラート』用。掲載中サービスの値上げ発表を拾う。BtoB/調査系のノイズが多いので NOISE 語で除外＋人の目で選別。" },
     { "name": "PR TIMES『値上げ』",         "url": "https://prtimes.jp/topics/keywords/%E5%80%A4%E4%B8%8A%E3%81%92" },
     { "name": "PR TIMES『価格改定』",       "url": "https://prtimes.jp/topics/keywords/%E4%BE%A1%E6%A0%BC%E6%94%B9%E5%AE%9A" },
@@ -36,7 +38,7 @@
     { "id": 3102, "service": "dアニメストア",          "url": "https://animestore.docomo.ne.jp/" },
     { "id": 3103, "service": "DMM TV",               "url": "https://tv.dmm.com/vod/" },
     { "id": 3104, "service": "TSUTAYA DISCAS",        "url": "https://www.discas.net/" },
-    { "id": 3160, "service": "FOD",                  "url": "https://fod.fujitv.co.jp/", "note": "JS描画のため下の aggregators のFODまとめ記事も併用" },
+    { "id": null, "service": "FOD",                  "url": "https://fod.fujitv.co.jp/", "note": "初月100円(id 3160)は9/2終了で削除済み。期間限定offerの再開を監視。JS描画のため aggregators のまとめ記事も併用" },
     { "id": null, "service": "Netflix",              "url": "https://www.netflix.com/jp/",  "note": "check-only（無料トライアル無し。復活監視）" },
     { "id": null, "service": "Hulu",                 "url": "https://www.hulu.jp/",         "note": "check-only（トライアル有無が変動）" },
     { "id": null, "service": "ABEMAプレミアム",        "url": "https://abema.tv/",            "note": "check-only" },
@@ -71,6 +73,9 @@
     { "id": 3120, "service": "スタディサプリ ENGLISH",  "url": "https://eigosapuri.jp/" },
     { "id": 3121, "service": "Duolingo",             "url": "https://ja.duolingo.com/" },
     { "id": 3122, "service": "LEAN BODY",            "url": "https://lean-body.jp/" },
-    { "id": 3150, "service": "Nintendo Switch Online", "url": "https://www.nintendo.com/jp/switch-online/" }
+    { "id": 3150, "service": "Nintendo Switch Online", "url": "https://www.nintendo.com/jp/switch-online/" },
+
+    { "id": 3220, "service": "楽天カード 新規入会キャンペーン", "url": "https://www.rakuten-card.co.jp/campaign/", "note": "終了日時つきの短期キャンペーンが多い。ポイント数・期間が変わりやすい" },
+    { "id": 3221, "service": "楽天モバイル キャンペーン",       "url": "https://network.mobile.rakuten.co.jp/campaign/" }
   ]
 }

@@ -222,7 +222,7 @@ const STORAGE_KEY = "minogasan.v1";
 const CATEGORIES = window.CATEGORIES || ["すべて"];
 const CAMPAIGNS = (window.CAMPAIGNS || []).slice();
 const SITUATION_TAGS = window.SITUATION_TAGS || [];
-const CAT_EMOJI = { "動画":"🎬", "音楽":"🎵", "雑誌":"📖", "フード":"🍔", "買い物":"🛍️", "くらし":"🏠", "ゲーム":"🎮" };
+const CAT_EMOJI = { "動画":"🎬", "音楽":"🎵", "雑誌":"📖", "フード":"🍔", "買い物":"🛍️", "くらし":"🏠", "ゲーム":"🎮", "金融・通信":"💳" };
 const tagLabel = (id) => { const t = SITUATION_TAGS.find(x => x.id === id); return t ? t.label : id; };
 const campaignMatchesTags = (c, ids) => Array.isArray(c.tags) && c.tags.some(t => ids.includes(t));
 const PREFECTURES = window.PREFECTURES || [];
