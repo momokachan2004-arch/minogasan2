@@ -365,6 +365,8 @@ function datePickMsg(c) {
 function listFlex(campaigns, label, filterFn) {
   const active = campaigns
     .map((c) => ({ ...c, _left: daysLeft(c.deadline) }))
+    // 地域限定（areas あり）は、地域を持たない bot では出さない（全国のみ）
+    .filter((c) => !(Array.isArray(c.areas) && c.areas.length > 0))
     .filter((c) => (c._left == null || c._left >= 0) && filterFn(c));
   if (!active.length) {
     return [textMsg(`${label}は今のところありません。\n「キャンペーン」で全件を表示できます。`)];

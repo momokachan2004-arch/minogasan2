@@ -114,6 +114,12 @@
   .toggle-row { margin:4px 16px 12px; display:flex; align-items:center; gap:6px; background:none; border:none;
     padding:0; cursor:pointer; font-size:12px; color:var(--dim); }
   .toggle-row.on { color:var(--accent); }
+  .areabar { margin:0 16px 10px; display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); }
+  .areabar select { font-family:var(--fb); font-size:12.5px; padding:6px 10px; border-radius:10px; max-width:58%;
+    border:1px solid var(--line); background:var(--surface-1); color:var(--ink); }
+  .areahint { font-size:11px; color:var(--dim); }
+  .areatag { margin-left:6px; font-size:10.5px; padding:1px 7px; border-radius:999px; letter-spacing:0;
+    color:var(--accent); background:var(--accent-weak); }
   .foryou { border-bottom:1px solid var(--line); margin-bottom:8px; }
   .foryou-h { padding:2px 16px 8px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;
     font-family:var(--fd); font-weight:700; font-size:13px; color:var(--ink); }
@@ -219,6 +225,11 @@ const SITUATION_TAGS = window.SITUATION_TAGS || [];
 const CAT_EMOJI = { "動画":"🎬", "音楽":"🎵", "雑誌":"📖", "フード":"🍔", "買い物":"🛍️", "くらし":"🏠", "ゲーム":"🎮" };
 const tagLabel = (id) => { const t = SITUATION_TAGS.find(x => x.id === id); return t ? t.label : id; };
 const campaignMatchesTags = (c, ids) => Array.isArray(c.tags) && c.tags.some(t => ids.includes(t));
+const PREFECTURES = window.PREFECTURES || [];
+// 地域限定キャンペーン（c.areas = ["千葉県"] など）。areas が無い/空 = 全国。
+// 表示条件：全国のもの ＋（地域を設定していれば）その都道府県のもの。地域未設定なら全国のみ。
+const isRegional = (c) => Array.isArray(c.areas) && c.areas.length > 0;
+const areaVisible = (c, area) => !isRegional(c) || (!!area && c.areas.includes(area));
 
 // アクセス解析イベント（GoatCounter が読み込まれていれば送る。イベント名のみ・個人情報なし）
 function track(name) {
@@ -309,6 +320,7 @@ function defaultState() {
     followedServices: [],            // サービス単位のフォロー（サービス名）
     followedCategories: [],          // カテゴリ単位のフォロー（カテゴリ名）
     interestTags: [],                // 関心タグ（SITUATION_TAGS の id）
+    area: "",                        // 地域（都道府県名。"" = 未設定＝全国のみ表示）
     usage: {},                       // { [id]: { startDate: "YYYY-MM-DD" } }
     notifEnabled: true,
     notifSent: {},                   // { [id]: ["added","before3"] }  ※1件につき最大2回
@@ -374,6 +386,8 @@ function computeAndApplyNotifications(prev) {
   const canNotify = (typeof Notification !== "undefined") && Notification.permission === "granted";
 
   for (const c of CAMPAIGNS) {
+    // 地域外の地域限定キャンペーンは通知しない（お気に入り／利用開始を記録済みのものは対象）
+    if (!areaVisible(c, prev.area) && !prev.favorites.includes(c.id) && !prev.usage[c.id]) continue;
     const already = (sent[c.id] || []).slice();
     const push = (type, level, message) => {
       if (already.includes(type) || already.length >= 2) return;
@@ -538,14 +552,15 @@ function HomeScreen({ s, category, setCategory, onBell, unseen }) {
 
   const q = query.trim().toLowerCase();
   const personalizedActive = state.personalizeEnabled && state.interestTags.length > 0;
+  const inArea = (c) => areaVisible(c, state.area);
   const forYou = personalizedActive
-    ? CAMPAIGNS.filter(c => campaignMatchesTags(c, state.interestTags) && notEnded(c)).sort(byUrgency)
+    ? CAMPAIGNS.filter(c => inArea(c) && campaignMatchesTags(c, state.interestTags) && notEnded(c)).sort(byUrgency)
     : [];
   const showForYou = personalizedActive && !q && !followOnly && !urgentOnly && category === "すべて" && forYou.length > 0;
   const forYouShown = forYou.slice(0, 6);
   const forYouIds = new Set(showForYou ? forYouShown.map(c => c.id) : []);
 
-  let list = CAMPAIGNS.slice();
+  let list = CAMPAIGNS.filter(inArea);
   if (category !== "すべて") list = list.filter(c => c.category === category);
   if (followOnly) list = list.filter(c => s.followMatch(c));
   if (urgentOnly) list = list.filter(isUrgent);
@@ -553,7 +568,7 @@ function HomeScreen({ s, category, setCategory, onBell, unseen }) {
   if (showForYou) list = list.filter(c => !forYouIds.has(c.id));
   list.sort(byUrgency);
 
-  const urgentCount = CAMPAIGNS.filter(isUrgent).length;
+  const urgentCount = CAMPAIGNS.filter(c => inArea(c) && isUrgent(c)).length;
 
   return (
     <div>
@@ -604,6 +619,17 @@ function HomeScreen({ s, category, setCategory, onBell, unseen }) {
         <div className="foryou-empty">選んだ関心に合うキャンペーンは今はありません。追加され次第、ここと通知でお知らせします。</div>
       )}
 
+      {PREFECTURES.length > 0 && (
+        <label className="areabar">
+          <span aria-hidden="true">📍</span>
+          <select value={state.area || ""} onChange={e => { track("area_set"); s.set({ area: e.target.value }); }} aria-label="地域">
+            <option value="">地域: 未設定（全国のみ）</option>
+            {PREFECTURES.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <span className="areahint">{state.area ? "全国 ＋ " + state.area + "限定" : "地域限定は非表示"}</span>
+        </label>
+      )}
+
       <div className="chips">
         {CATEGORIES.map(cat => (
           <button key={cat} className={"chip" + (category === cat ? " on" : "")} onClick={() => setCategory(cat)}>{cat}</button>
@@ -629,7 +655,7 @@ function CategoryScreen({ s, goHome }) {
       <div className="screen-sub">カテゴリ名をタップすると一覧に移動します。「新着を通知」は、そのカテゴリに新しいキャンペーンが追加されたときの通知だけを受け取る設定です（「フォロー中」には入りません）。</div>
       <div className="list">
         {CATEGORIES.filter(c => c !== "すべて").map(cat => {
-          const count = CAMPAIGNS.filter(c => c.category === cat).length;
+          const count = CAMPAIGNS.filter(c => c.category === cat && areaVisible(c, state.area)).length;
           const followed = state.followedCategories.includes(cat);
           return (
             <div key={cat} className="card" style={{ alignItems:"center", padding:"12px 14px", gap:12 }}>
@@ -821,7 +847,7 @@ function CampaignCard({ c, s }) {
       <div className="card-main">
         <div className="card-main-top">
           <div style={{ minWidth:0, cursor:"pointer" }} onClick={() => s.setDetailId(c.id)}>
-            <div className="svc">{c.service}</div>
+            <div className="svc">{c.service}{isRegional(c) && <span className="areatag">📍{c.areas.join("・")}</span>}</div>
             <div className="ttl">{c.title}</div>
             <div className="dtl">{c.detail}</div>
           </div>
@@ -1240,7 +1266,7 @@ function DocScreen({ kind, onClose }) {
         <div>
           <h2>プライバシーポリシー</h2>
           <h4>取得する情報</h4>
-          <p>本アプリは、お気に入りにしたキャンペーン、フォローしたサービス／カテゴリ、記録した利用開始日、選択した関心カテゴリ、表示テーマ、通知のオン／オフ設定、通知履歴を保存します。氏名・メールアドレス・電話番号・アカウントは取得しません。</p>
+          <p>本アプリは、お気に入りにしたキャンペーン、フォローしたサービス／カテゴリ、記録した利用開始日、選択した関心カテゴリ、設定した地域（都道府県）、表示テーマ、通知のオン／オフ設定、通知履歴を保存します。氏名・メールアドレス・電話番号・アカウントは取得しません。</p>
           <h4>保存場所</h4>
           <p>上記の情報（お気に入り・フォロー・利用開始日・関心カテゴリ・通知履歴など）はすべて、お使いの端末のブラウザ内（localStorage）にのみ保存されます。運営のサーバーや第三者へ送信・保存されることはありません。</p>
           <h4>利用目的</h4>
