@@ -427,4 +427,48 @@ window.CAMPAIGNS = [
     areas: ["東京都"],
     lastChecked: "2026-09-25", source: "公式",
   },
+
+  /* ---- 11月以降分。出典: https://paypay.ne.jp/notice/20260915/cp-jichitai/ （2026-09-15 の公式お知らせ）---- */
+  {
+    id: 3214, service: "野田村 PayPay還元", icon: "🛍️", category: "買い物",
+    title: "PayPay 最大20%還元（野田村）", detail: "2026/11/1〜11/30。1回あたり最大2,000ポイント、期間あたり最大5,000ポイントまで。対象は村内のPayPay加盟店のうち対象店舗",
+    url: "https://paypay.ne.jp/notice/20260915/cp-jichitai/",
+    deadline: "2026-11-30", freeDays: null, hasCancellation: false, addedAt: "2026-09-26",
+    areas: ["岩手県"],
+    lastChecked: "2026-09-26", source: "公式",
+  },
+  {
+    id: 3215, service: "大泉町 PayPay還元", icon: "🛍️", category: "買い物",
+    title: "PayPay 最大20%還元（大泉町）", detail: "2026/11/1〜11/30。1回あたり最大2,000ポイント、期間あたり最大4,000ポイントまで。対象は町内のPayPay加盟店のうち対象店舗",
+    url: "https://paypay.ne.jp/notice/20260915/cp-jichitai/",
+    deadline: "2026-11-30", freeDays: null, hasCancellation: false, addedAt: "2026-09-26",
+    areas: ["群馬県"],
+    lastChecked: "2026-09-26", source: "公式",
+  },
+  {
+    id: 3216, service: "枚方市 PayPay還元", icon: "🛍️", category: "買い物",
+    title: "PayPay 最大15%還元（枚方市）", detail: "2026/11/1〜11/30。1回あたり最大500ポイント、期間あたり最大3,000ポイントまで。対象は市内のPayPay加盟店のうち対象店舗",
+    url: "https://paypay.ne.jp/notice/20260915/cp-jichitai/",
+    deadline: "2026-11-30", freeDays: null, hasCancellation: false, addedAt: "2026-09-26",
+    areas: ["大阪府"],
+    lastChecked: "2026-09-26", source: "公式",
+  },
+  {
+    // 「PayPayクーポン活用事業」：クーポンを使って支払うと最大20%がポイントで戻る形。
+    id: 3217, service: "潟上市 PayPayクーポン", icon: "🎟️", category: "買い物",
+    title: "PayPayクーポンで最大20%還元（潟上市）", detail: "2026/11/1〜11/30。1回あたり最大1,000ポイント、期間あたり最大2,000ポイントまで。対象は市内の対象店舗",
+    url: "https://paypay.ne.jp/notice/20260915/cp-jichitai/",
+    deadline: "2026-11-30", freeDays: null, hasCancellation: false, addedAt: "2026-09-26",
+    areas: ["秋田県"],
+    lastChecked: "2026-09-26", source: "公式",
+  },
+  {
+    // 「PayPayクーポン活用事業」。利用期間は 11/1〜12/31。
+    id: 3218, service: "豊田市 PayPayクーポン", icon: "🎟️", category: "買い物",
+    title: "PayPayクーポンで最大20%還元（豊田市）", detail: "2026/11/1〜12/31。1回あたり最大20,000ポイント、期間あたり最大200,000ポイントまで。対象は市内の対象店舗",
+    url: "https://paypay.ne.jp/notice/20260915/cp-jichitai/",
+    deadline: "2026-12-31", freeDays: null, hasCancellation: false, addedAt: "2026-09-26",
+    areas: ["愛知県"],
+    lastChecked: "2026-09-26", source: "公式",
+  },
 ];
