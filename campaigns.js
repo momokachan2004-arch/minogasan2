@@ -471,4 +471,24 @@ window.CAMPAIGNS = [
     areas: ["愛知県"],
     lastChecked: "2026-09-26", source: "公式",
   },
+
+  /* ---- 千葉県（厚めに収集中）。自治体・決済会社の公式ページで確認したもの ---- */
+  {
+    // 出典: 茂原市公式 https://www.city.mobara.chiba.jp/0000009373.html （まとめサイトでは締切が 9/15 と 9/30 で割れていたが、公式は 9/30）
+    id: 3230, service: "茂原市 デジタル版プレミアム付商品券（モバりんPay）", icon: "🎫", category: "買い物",
+    title: "10,000円で13,000円分（プレミアム30%）", detail: "2026/7/1時点で茂原市に住民登録がある人が対象。申込 9/1〜9/30、1人2口まで（超過時は抽選、当選通知 10/13以降）。販売開始 10/19、有効期限 2027/2/28",
+    url: "https://www.city.mobara.chiba.jp/0000009373.html",
+    deadline: "2026-09-30", freeDays: null, hasCancellation: false, addedAt: "2026-09-26",
+    areas: ["千葉県"],
+    lastChecked: "2026-09-26", source: "公式",
+  },
+  {
+    // 出典: au PAY 公式 https://media.aupay.wallet.auone.jp/articles/5215
+    id: 3231, service: "船橋FACE au PAYクーポン", icon: "🎟️", category: "買い物",
+    title: "au PAYで最大30%割引クーポン（船橋FACE）", detail: "2026/9/4〜10/30。1回200円（税込）以上のau PAY（コード支払い）が対象、1回あたりの割引は最大500円まで。先にアプリでクーポンを獲得してから支払う。総額が所定額に達すると配布終了",
+    url: "https://media.aupay.wallet.auone.jp/articles/5215",
+    deadline: "2026-10-30", freeDays: null, hasCancellation: false, addedAt: "2026-09-26",
+    areas: ["千葉県"],
+    lastChecked: "2026-09-26", source: "公式",
+  },
 ];
