@@ -70,25 +70,14 @@ window.SITUATION_TAGS = [
 window.CAMPAIGNS = [
   /* ============ 確認済み（2026-08-29 公式サイトで条件を確認）============ */
   {
-    // 2026-08-30 運営が公式で確認：初月100円キャンペーン、受付 7/21〜9/2。
-    // 「初月100円」= 安い期間の長さを 30日 とみなし、利用開始日を記録すると
-    // 通常料金(976円)になる30日前にリマインド。過去に加入歴のある人は対象外。
-    id: 3160, service: "FOD", icon: "📺", category: "動画",
-    title: "初月100円キャンペーン", detail: "初回登録・過去に未加入の人が対象。翌月以降は月額976円",
-    url: "https://fod.fujitv.co.jp/",
-    deadline: "2026-09-02", freeDays: 30, hasCancellation: true, addedAt: "2026-08-30",
-    tags: ["tanshin"],
-    lastChecked: "2026-08-30", source: "運営確認",
-  },
-  {
-    // Premium Standard は「これまでPremium未利用」の人が対象。3か月無料、その後は月額1,080円。
-    // キャンペーン終了日 2026-09-23。
+    // 2026-09-25 公式ページで確認：3か月無料（〜9/23）は終了。現在は 1か月無料（Standard）、終了日の告知なし＝通年。
+    // Premium Standard は「これまでPremium未利用」の人が対象。終了後は月額1,080円。
     id: 3006, service: "Spotify", icon: "🎶", category: "音楽",
-    title: "Premium Standard 3か月無料", detail: "これまでにPremiumを利用したことがない人が対象。終了後は月額1,080円",
+    title: "Premium Standard 1か月無料", detail: "これまでにPremiumを利用したことがない人が対象。終了後は月額1,080円",
     url: "https://www.spotify.com/jp/premium/",
-    deadline: "2026-09-23", freeDays: 90, hasCancellation: true, addedAt: "2026-08-29",
+    deadline: null, freeDays: 30, hasCancellation: true, addedAt: "2026-08-29",
     tags: ["tanshin"],
-    lastChecked: "2026-08-29", source: "公式",
+    lastChecked: "2026-09-25", source: "公式",
   },
   {
     // 「31日間無料トライアル」。終了日の告知なし＝通年（deadline: null）。トライアル中にポイント付与。
@@ -297,17 +286,6 @@ window.CAMPAIGNS = [
 
   /* ============ 運営確認（運営者が公式ページで内容を確認したもの）============ */
   {
-    // 2026-08-30 PR TIMES『ワンコイン』のスナップショットから発見 → 運営が内容確認。
-    // チョコクロ＋対象ドリンクのセットが期間中 終日500円（税込）。8/18〜9/4。
-    // 一部店舗（関西国際空港店／ユニバーサル・シティウォーク店／茅ケ崎駅前店）は対象外。
-    // ※ url は公式サイトのトップ。キャンペーン専用ページが分かれば差し替える。
-    id: 3170, service: "サンマルクカフェ", icon: "🥐", category: "フード",
-    title: "チョコクロ＋ドリンク ワンコイン（500円）", detail: "対象ドリンクとのセットが期間中 終日500円（税込）。一部店舗は対象外",
-    url: "https://www.saint-marc.jp/",
-    deadline: "2026-09-04", freeDays: null, hasCancellation: false, addedAt: "2026-08-30",
-    lastChecked: "2026-08-30", source: "運営確認",
-  },
-  {
     // 2026-08-30 PR TIMES の巡回から発見 → 運営が内容確認。
     // 雑誌「歴史群像」の記事がスマホ・PCで読み放題になる新サブスク（2026-08-01 開始）。
     // 月額880円（税込）。入会から最初の3か月無料は「2026-10-31 までの入会」が対象。
@@ -391,5 +369,42 @@ window.CAMPAIGNS = [
     deadline: "2026-10-31", freeDays: null, hasCancellation: false, addedAt: "2026-08-31",
     tags: ["kosodate"],
     lastChecked: "2026-08-31", source: "公式",
+  },
+
+  /* ============ 地域限定（areas あり）：PayPay「自治体キャンペーン」公式お知らせ 2026-08-31 で確認 ============
+     出典: https://paypay.ne.jp/notice/20260831/cp-jichitai/   （PayPay 加盟店のうち対象店舗のみ）
+     ※ 期間は「開始日」も detail に書く。deadline は受付/開催の最終日。 */
+  {
+    // 還元型。付与上限は公式お知らせの数値を要確認のうえ追記可。
+    id: 3210, service: "宮古島市キャッシュレス還元（PayPay）", icon: "🏝️", category: "買い物",
+    title: "PayPay 最大25%還元（宮古島市）", detail: "2026/10/1〜12/31。対象は宮古島市内のPayPay加盟店のうち対象店舗。ポイントの付与は後日",
+    url: "https://paypay.ne.jp/notice/20260831/cp-jichitai/",
+    deadline: "2026-12-31", freeDays: null, hasCancellation: false, addedAt: "2026-09-25",
+    areas: ["沖縄県"],
+    lastChecked: "2026-09-25", source: "公式",
+  },
+  {
+    id: 3211, service: "都城市 中心市街地商店街キャンペーン（PayPay）", icon: "🛍️", category: "買い物",
+    title: "PayPay 15%還元（都城市・第5弾）", detail: "2026/10/1〜10/31。1回あたり最大1,000ポイント、期間あたり最大1,500ポイントまで。対象は市内の対象店舗",
+    url: "https://paypay.ne.jp/notice/20260831/cp-jichitai/",
+    deadline: "2026-10-31", freeDays: null, hasCancellation: false, addedAt: "2026-09-25",
+    areas: ["宮崎県"],
+    lastChecked: "2026-09-25", source: "公式",
+  },
+  {
+    id: 3212, service: "入間市 PayPay商品券", icon: "🎫", category: "買い物",
+    title: "5,000円で7,500円分（プレミアム50%）", detail: "入間市在住の12歳以上が対象。申込 2026/10/1 10:00〜10/29 23:59、購入 10/30〜2027/1/30、利用期限 2027/1/31",
+    url: "https://paypay.ne.jp/notice/20260831/cp-jichitai/",
+    deadline: "2026-10-29", freeDays: null, hasCancellation: false, addedAt: "2026-09-25",
+    areas: ["埼玉県"],
+    lastChecked: "2026-09-25", source: "公式",
+  },
+  {
+    id: 3213, service: "江戸川区 PayPay商品券", icon: "🎫", category: "買い物",
+    title: "額面6,000円分（プレミアム1,000円）", detail: "江戸川区在住の16歳以上が対象。申込 2026/10/1 10:00〜10/25 23:59、販売 11/2〜11/8、利用期限 12/31",
+    url: "https://paypay.ne.jp/notice/20260831/cp-jichitai/",
+    deadline: "2026-10-25", freeDays: null, hasCancellation: false, addedAt: "2026-09-25",
+    areas: ["東京都"],
+    lastChecked: "2026-09-25", source: "公式",
   },
 ];

@@ -18,14 +18,14 @@
 | TSUTAYA DISCAS | 30日 | 🟡 |
 | Amazon プライム・ビデオ | 30日（プライムに含む） | ✅（Amazonプライムとして） |
 | Netflix | ❌ トライアル無し（2019〜） | 除外 |
-| FOD | ❌ 常設の無料トライアル無し。ただし期間限定offerが不定期（2026-08-30: 初月100円 受付7/21〜9/2 を運営確認 → id 3160 で掲載） | 巡回対象に追加済み |
+| FOD | ❌ 常設の無料トライアル無し。期間限定offerが不定期（初月100円 受付7/21〜9/2 は終了・2026-09-25 に campaigns.js から削除。再開したら再掲） | 巡回対象に追加済み |
 | Disney+ / ABEMA / Hulu / TELASA / WOWOW | ❌ 常設の無料トライアル無し | 保留（期間限定offerが出たら都度） |
 
 ## 音楽
 
 | サービス | 無料期間の目安 | 状況 |
 |---|---|---|
-| Spotify | Premium 3か月（〜2026-09-23） | ✅ |
+| Spotify | Premium Standard 1か月（3か月無料〜9/23 は終了。2026-09-25 に 1か月無料へ更新） | ✅ |
 | 楽天ミュージック | スタンダード 1か月／学生 90日 | ✅ |
 | Audible | 30日 | ✅ |
 | Apple Music | 1か月（対象機器購入で長期） | 🟡 |
@@ -109,3 +109,13 @@
 - 電子書籍読み放題比較：https://life.oricon.co.jp/rank-manga-apps/special/comparison/subscription/
 - 宅配食お試し：https://meal.app-liv.jp/archive/137067/ , https://takushoku-repo.com/campaign/
 - Kindle Unlimited キャンペーン：https://appllio.com/kindle-unlimited-campaign-information
+
+---
+
+## 期限切れで campaigns.js から外したもの（再開したら再掲）
+
+| サービス | 内容 | 終了日 | 備考 |
+|---|---|---|---|
+| FOD | 初月100円（受付 7/21〜9/2） | 2026-09-02 | id 3160。公式サイトは Claude 環境から取得不可のため再開は目視 |
+| サンマルクカフェ | チョコクロ＋ドリンク ワンコイン500円 | 2026-09-04 | id 3170。PR TIMES『ワンコイン』で発見した単発企画 |
+| Spotify | Premium Standard 3か月無料 | 2026-09-23 | id 3006 は 1か月無料（通年）に更新して残した |
