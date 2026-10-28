@@ -98,11 +98,11 @@ window.CAMPAIGNS = [
     lastChecked: "2026-08-29", source: "公式",
   },
 　{
-  id: 3042, service: "日経電子版", icon: "📰", category: "雑誌",
-  title: "学生限定 2カ月無料＋6カ月割引", detail: "18歳以上の学生が対象。申込日から2カ月間無料、その後6カ月間は毎月1,500円割引（通常 月額4,277円）",
-  url: "https://www.nikkei.com/promotion/campaign/student/",
-  deadline: "2026-10-28", freeDays: 60, hasCancellation: true, addedAt: "2026-10-28",
-  lastChecked: "2026-10-28", source: "公式",
+  　id: 3042, service: "日経電子版", icon: "📰", category: "雑誌",
+  　title: "学生限定 2カ月無料＋6カ月割引", detail: "18歳以上の学生が対象。申込日から2カ月間無料、その後6カ月間は毎月1,500円割引（通常 月額4,277円）",
+  　url: "https://www.nikkei.com/promotion/campaign/student/",
+  　deadline: "2026-10-28", freeDays: 60, hasCancellation: true, addedAt: "2026-10-28",
+  　lastChecked: "2026-10-28", source: "公式",
 　},
   {
     // 「31日間無料」。初回限定。締切の記載なし＝通年。31日以内の解約で料金なし。以降 月額580円。
